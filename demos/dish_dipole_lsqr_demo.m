@@ -77,32 +77,56 @@ elapsed = toc;
 disp(['Elapsed E calculation time: ', num2str(elapsed), ' seconds']);
 
 %% Find peaks and add dipole to try and reduce sidelobes
-% Find peaks
-[peaks,sl_idx] = findpeaks(EdB, 'MinPeakProminence', 3);
-valid_peaks_mask = (peaks <= -3);
-peaks = peaks(valid_peaks_mask);
-sl_idx = sl_idx(valid_peaks_mask); % indices at which sidelobes exist
-Etheta_sl = Etheta(sl_idx); % Sidelobe Etheta
-Ephi_sl = Ephi(sl_idx);     % Sidelobe Ephi
-sl_deg = ff_theta_range_deg(sl_idx); % theta value in deg at which the maxima is achieved
-sl_rad = ff_theta_range(sl_idx);     % theta value in rad at which the maxima is achieved
+% % Find peaks
+% [peaks,sl_idx] = findpeaks(EdB, 'MinPeakProminence', 3);
+% valid_peaks_mask = (peaks <= -3);
+% peaks = peaks(valid_peaks_mask);
+% sl_idx = sl_idx(valid_peaks_mask); % indices at which sidelobes exist
+% Etheta_sl = Etheta(sl_idx); % Sidelobe Etheta
+% Ephi_sl = Ephi(sl_idx);     % Sidelobe Ephi
+% sl_deg = ff_theta_range_deg(sl_idx); % theta value in deg at which the maxima is achieved
+% sl_rad = ff_theta_range(sl_idx);     % theta value in rad at which the maxima is achieved
+% 
+% % Choose targeted sidelobes around the center sidelobe
+% num_sl = numel(peaks); % can also just write a number here
+% peaks_targ = center_slice(peaks, num_sl);
+% sl_idx_targ = center_slice(sl_idx, num_sl);
+% % peaks_targ = peaks_targ(1:5:end);
+% % sl_idx_targ = sl_idx_targ(1:5:end);
+% Etheta_sl_targ = Etheta(sl_idx_targ); % Sidelobe Etheta
+% Ephi_sl_targ = Ephi(sl_idx_targ);     % Sidelobe Ephi
+% sl_deg_targ = ff_theta_range_deg(sl_idx_targ); % theta value in deg at which the maxima is achieved
+% sl_rad_targ = ff_theta_range(sl_idx_targ);     % theta value in rad at which the maxima is achieved
 
-% Choose targeted sidelobes around the center sidelobe
-num_sl = numel(peaks); % can also just write a number here
-peaks_targ = center_slice(peaks, num_sl);
-sl_idx_targ = center_slice(sl_idx, num_sl);
-% peaks_targ = peaks_targ(1:5:end);
-% sl_idx_targ = sl_idx_targ(1:5:end);
-Etheta_sl_targ = Etheta(sl_idx_targ); % Sidelobe Etheta
-Ephi_sl_targ = Ephi(sl_idx_targ);     % Sidelobe Ephi
-sl_deg_targ = ff_theta_range_deg(sl_idx_targ); % theta value in deg at which the maxima is achieved
-sl_rad_targ = ff_theta_range(sl_idx_targ);     % theta value in rad at which the maxima is achieved
+% Get the target Etheta and Ephi
+uptoangledeg = 3.5; % TODO: get this automatically. then, make a window that looks like this:
+%  +---------+           +-----+          +-----------+
+%            |           |     |          |
+%            +-----------+     +----------+
+%   far SLs    close SLs   Main  close SLs   far SLs
+%                          Lobe
+%
 
+rectwin = rectwindow((1-uptoangledeg/90)/2,0.5,ff_theta_res);
+% rectwin(abs(ff_theta_range_deg-180) > 30) = 1;
+
+csres = 1000;
+rectwin_targ = center_slice(rectwin, csres);
+theta_targ = center_slice(ff_theta_range, csres);
+Etheta_targ = center_slice(Etheta.*rectwin, csres);
+Ephi_targ = center_slice(Ephi.*rectwin, csres);
+Etheta_slice = center_slice(Etheta, csres);
+Ephi_slice = center_slice(Ephi, csres);
+
+% Build the c vector
+c_vec = [transpose(Etheta_targ); transpose(Ephi_targ)];
 % Build the b vector
-b_vec = [transpose(Etheta_sl_targ); transpose(Ephi_sl_targ)];
+b_vec = [transpose(Etheta_slice); transpose(Ephi_slice)];
+% build the d vector
+d_vec = c_vec - b_vec;
 
-M = numel(peaks_targ); % number of sidelobes
-N = 200; % number of dipoles added
+M = numel(b_vec)/2; % divide by 2 because E has 2 components (theta and phi)
+N = 50; % number of dipoles added
 dip_per_sl = M/N;
 
 % Build the Z matrix
@@ -111,22 +135,26 @@ dipoles = cell([N, 1]);
 I0 = 1e-9;
 l = 0.25*lambda0;
 %dipole_rho_location = linspace(-dish.d/2 + (dish.d/N)/2, dish.d/2 - (dish.d/N)/2, N);
-dipole_rho_location = 0.5*linspace(-N + 1, N - 1, N)*lambda0*0.25;
+%dipole_rho_location = 0.5*linspace(-N + 1, N - 1, N)*lambda0*0.25;
+rho_loc = dish.d/2;
+dipole_phi_location = linspace(0,2*pi*(1-1/N),N);
 for n = 1:N
-    rho_loc = dipole_rho_location(n);
-    [xd,yd,zd] = pol2cart(phi,rho_loc,dish.z0);
-    dipole = DirectedDipole(I0,l,[xd,yd,zd],ff_r,sl_rad_targ(ceil(n*dip_per_sl)),phi);
-    %dipole = SimpleDipole(I0,l,[xd,yd,zd],[1,0,0]);
+    %rho_loc = dipole_rho_location(n);
+    %[xd,yd,zd] = pol2cart(phi,rho_loc,dish.z0);
+    phi_loc = dipole_phi_location(n);
+    [xd,yd,zd] = pol2cart(phi_loc,rho_loc,dish.z0);
+    %dipole = DirectedDipole(I0,l,[xd,yd,zd],ff_r,theta_targ(ceil(n*dip_per_sl)),phi);
+    dipole = SimpleDipole(I0,l,[xd,yd,zd],[1,0,0]);
     dipoles{n} = dipole;
     for m = 1:M
-        [Etheta_dip, Ephi_dip] = dipole.E_calc(ff_r,sl_rad_targ(m),phi,freq,0);
+        [Etheta_dip, Ephi_dip] = dipole.E_calc(ff_r,theta_targ(m),phi,freq,0);
         Zmn(m,n) = Etheta_dip; % m = 1..M is theta component
         Zmn(m+M,n) = Ephi_dip; % m = M+1...2M is phi component
     end
 end
 
 % Use least squares to solve the system of equations
-a_vec = lsqr(Zmn, -b_vec);
+a_vec = lsqr(Zmn, d_vec, 1e-6, 1000);
 
 % Superimpose the dipoles E-field on the dish E-field
 Etheta_sum = Etheta;
@@ -147,7 +175,7 @@ Enorm_sum = Emag_sum / max(Emag(:));
 EdB_sum = 20 * log10(Enorm_sum);
 
 %% Plot surface current magnitude
-dish.plot(a);
+% dish.plot(a);
 
 %% Plot 2D rectangular radiation pattern
 figure;
@@ -155,9 +183,8 @@ theta_shift = -180;
 plot(ff_theta_range_deg + theta_shift, EdB);
 hold on;
 plot(ff_theta_range_deg + theta_shift, EdB_sum, 'LineStyle', '-');
-plot(sl_deg + theta_shift, peaks, 'rv', 'MarkerFaceColor', 'r');
-plot(sl_deg_targ + theta_shift, peaks_targ, 'rv', 'MarkerFaceColor', 'g');
-legend("w/o dipoles", "w/ dipoles", "peaks", "targeted peaks");
+plot(rad2deg(theta_targ) + theta_shift, 20*log10(rectwin_targ));
+legend("w/o dipoles", "w/ dipoles", "window function");
 title(sprintf("Radiation Pattern (phi = %0.0f°, Normalized Field in dB)", rad2deg(phi)));
 ylabel('Relative Magnitude [dB]');
 xlabel("\theta' [deg]");
