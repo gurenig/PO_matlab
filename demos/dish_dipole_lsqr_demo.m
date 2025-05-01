@@ -126,7 +126,7 @@ b_vec = [transpose(Etheta_slice); transpose(Ephi_slice)];
 d_vec = c_vec - b_vec;
 
 M = numel(b_vec)/2; % divide by 2 because E has 2 components (theta and phi)
-N = 50; % number of dipoles added
+N = 100; % number of dipoles added
 dip_per_sl = M/N;
 
 % Build the Z matrix
@@ -144,7 +144,7 @@ for n = 1:N
     phi_loc = dipole_phi_location(n);
     [xd,yd,zd] = pol2cart(phi_loc,rho_loc,dish.z0);
     %dipole = DirectedDipole(I0,l,[xd,yd,zd],ff_r,theta_targ(ceil(n*dip_per_sl)),phi);
-    dipole = SimpleDipole(I0,l,[xd,yd,zd],[1,0,0]);
+    dipole = SimpleDipole(I0,l,[xd,yd,zd],[cos(phi_loc),sin(phi_loc),0]);
     dipoles{n} = dipole;
     for m = 1:M
         [Etheta_dip, Ephi_dip] = dipole.E_calc(ff_r,theta_targ(m),phi,freq,0);
