@@ -33,17 +33,25 @@ classdef SimpleDipole < handle
             % Calculate R
             % [x,y,z] = mysph2cart(r,theta,phi);
             % R = sqrt((x-obj.loc_vec(1)).^2 + (y-obj.loc_vec(2)).^2 + (z-obj.loc_vec(3)).^2);
-            % Check if need to use green's function
-            green = 1;
+
+            if nargin < 5
+                error(message('NotEnoughInputs'));
+            end
+            
             if nargin < 6 || isempty(usegreen)
+                usegreen = 1;
+            end
+
+            if ~isempty(r) && (usegreen > 0)
                 green = green3d(r, k);
-            elseif usegreen == 0
+            else
                 green = 1;
             end
+
             % Calculate A
             A = obj.mu0*obj.I0*obj.l*green .* ...
                 exp(1i*k*( obj.loc_vec(1).*sin(theta).*cos(phi) + ...
-                           obj.loc_vec(2).*sin(theta).*cos(phi) + ...
+                           obj.loc_vec(2).*sin(theta).*sin(phi) + ...
                            obj.loc_vec(3).*cos(theta) ));
             Ax = obj.dir_vec(1)*A;
             Ay = obj.dir_vec(2)*A;
@@ -51,7 +59,7 @@ classdef SimpleDipole < handle
             % Convert A from cartesian to spherical and derive the E field
             [~, Atheta, Aphi] = mycart2sphvec(Ax,Ay,Az,theta,phi);
             Etheta = -1i*omega*Atheta;
-            Ephi = -1*omega*Aphi;
+            Ephi = -1i*omega*Aphi;
         end
 
         function point_towards_target(obj, r, theta, phi)

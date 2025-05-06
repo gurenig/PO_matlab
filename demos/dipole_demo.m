@@ -24,6 +24,7 @@ theta_sl = deg2rad(10);
 
 %% Dipole handling
 dipole = DirectedDipole(I0,l,loc_vec,r_sl,theta_sl,phi_sl);
+%dipole = SimpleDipole(I0,l,loc_vec,dir_vec);
 
 %% Calculate far-field for a 3D graph
 phi_resolution = 100;

@@ -38,7 +38,7 @@ RIM = 2;
 %% Create dish and calculate surface current
 tic;
 
-rho_res = 200;
+rho_res = 100;
 phi_res = rho_res*2;
 t_res = rho_res*0.5;
 
@@ -77,37 +77,13 @@ elapsed = toc;
 disp(['Elapsed E calculation time: ', num2str(elapsed), ' seconds']);
 
 %% Find peaks and add dipole to try and reduce sidelobes
-% % Find peaks
-% [peaks,sl_idx] = findpeaks(EdB, 'MinPeakProminence', 3);
-% valid_peaks_mask = (peaks <= -3);
-% peaks = peaks(valid_peaks_mask);
-% sl_idx = sl_idx(valid_peaks_mask); % indices at which sidelobes exist
-% Etheta_sl = Etheta(sl_idx); % Sidelobe Etheta
-% Ephi_sl = Ephi(sl_idx);     % Sidelobe Ephi
-% sl_deg = ff_theta_range_deg(sl_idx); % theta value in deg at which the maxima is achieved
-% sl_rad = ff_theta_range(sl_idx);     % theta value in rad at which the maxima is achieved
-% 
-% % Choose targeted sidelobes around the center sidelobe
-% num_sl = numel(peaks); % can also just write a number here
-% peaks_targ = center_slice(peaks, num_sl);
-% sl_idx_targ = center_slice(sl_idx, num_sl);
-% % peaks_targ = peaks_targ(1:5:end);
-% % sl_idx_targ = sl_idx_targ(1:5:end);
-% Etheta_sl_targ = Etheta(sl_idx_targ); % Sidelobe Etheta
-% Ephi_sl_targ = Ephi(sl_idx_targ);     % Sidelobe Ephi
-% sl_deg_targ = ff_theta_range_deg(sl_idx_targ); % theta value in deg at which the maxima is achieved
-% sl_rad_targ = ff_theta_range(sl_idx_targ);     % theta value in rad at which the maxima is achieved
 
 % Get the target Etheta and Ephi
-uptoangledeg = 3.5; % TODO: get this automatically. then, make a window that looks like this:
-%  +---------+           +-----+          +-----------+
-%            |           |     |          |
-%            +-----------+     +----------+
-%   far SLs    close SLs   Main  close SLs   far SLs
-%                          Lobe
-%
+dish_analyzer = DishAnalyzer(dish);
+[~, bw_troughs, ~, ~] = dish_analyzer.get_beam_width(phi, EdB, ff_theta_range);
+uptoangledeg = rad2deg(bw_troughs/2);
 
-rectwin = rectwindow((1-uptoangledeg/90)/2,0.5,ff_theta_res);
+rectwin = rectwindow((1-uptoangledeg/90)/2,0.1,ff_theta_res);
 % rectwin(abs(ff_theta_range_deg-180) > 30) = 1;
 
 csres = 1000;
@@ -134,17 +110,33 @@ Zmn = zeros([2*M, N]); % times 2 because E has 2 components (theta and phi)
 dipoles = cell([N, 1]);
 I0 = 1e-9;
 l = 0.25*lambda0;
+%%%% option 1 - straight line
 %dipole_rho_location = linspace(-dish.d/2 + (dish.d/N)/2, dish.d/2 - (dish.d/N)/2, N);
 %dipole_rho_location = 0.5*linspace(-N + 1, N - 1, N)*lambda0*0.25;
+%%%% option 2 - ring
 rho_loc = dish.d/2;
 dipole_phi_location = linspace(0,2*pi*(1-1/N),N);
+%%%% option 3 - grid (worked for N=20^2)
+% x_loc = linspace(-dish.d/2, dish.d/2, sqrt(N))/sqrt(2);
+% x_loc = ((1:sqrt(N)) - sqrt(N)/2) * lambda0*0.25;
+% y_loc = x_loc;
+% [X_LOC, Y_LOC] = meshgrid(x_loc, y_loc);
+% xy_loc = [X_LOC(:), Y_LOC(:)];
+
 for n = 1:N
+    %%%% option 1 - straight line
     %rho_loc = dipole_rho_location(n);
     %[xd,yd,zd] = pol2cart(phi,rho_loc,dish.z0);
+    %%%% option 2 - ring
     phi_loc = dipole_phi_location(n);
     [xd,yd,zd] = pol2cart(phi_loc,rho_loc,dish.z0);
+    %%%% option 3 - grid
+    % xd = xy_loc(n,1);
+    % yd = xy_loc(n,2);
+    % zd = dish.z0;
     %dipole = DirectedDipole(I0,l,[xd,yd,zd],ff_r,theta_targ(ceil(n*dip_per_sl)),phi);
     dipole = SimpleDipole(I0,l,[xd,yd,zd],[cos(phi_loc),sin(phi_loc),0]);
+    %dipole = SimpleDipole(I0,l,[xd,yd,zd],[1,0,0]);
     dipoles{n} = dipole;
     for m = 1:M
         [Etheta_dip, Ephi_dip] = dipole.E_calc(ff_r,theta_targ(m),phi,freq,0);

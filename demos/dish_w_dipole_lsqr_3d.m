@@ -25,7 +25,7 @@ aperture_fields_fun = @(r, theta, phi) circ_aperture_fields(a, k, E0, r, theta, 
 %% Create dish and calculate surface current
 tic;
 
-rho_res = 200;
+rho_res = 100;
 phi_res = rho_res*2;
 t_res = rho_res*0.5;
 
@@ -42,60 +42,62 @@ disp(['Elapsed J calculation time: ', num2str(elapsed), ' seconds']);
 %% Calculate far-field for 0.5pi<theta<pi and 0<phi<2pi
 tic;
 
-phi_resolution = 20;
-theta_resolution = 100;
+phi_resolution = 10;
+theta_resolution = 1000;
 
 dish_analyzer = DishAnalyzer(dish);
-[E_dB, Edish_theta, Edish_phi, THETA_FIELD, PHI_FIELD] = dish_analyzer.get_3d_rad_pattern(theta_resolution, phi_resolution);
+[EdB, Etheta, Ephi, THETA, PHI] = dish_analyzer.get_3d_rad_pattern(theta_resolution, phi_resolution);
 
 elapsed = toc;
 disp(['Elapsed E calculation time: ', num2str(elapsed), ' seconds']);
 
 %% Add dipoles to try and reduce sidelobes
-uptoangledeg = 3.5;
-target_atten = 0.1;
-theta_phi_arr = [THETA_FIELD(:), PHI_FIELD(:)]; % arrange coords to 2 col matrix
-Etheta_curr = Edish_theta(:); % The current theta field
-Ephi_curr = Edish_phi(:);     % The current phi field
-target_idx = theta_phi_arr(:,1)-0.5*pi < deg2rad(uptoangledeg); % coords at which we want to attenuate
-% Create the target field values (for theta and phi)
-Etheta_targ = Etheta_curr;
-Etheta_targ(target_idx) = Etheta_targ(target_idx) * target_atten;
-Ephi_targ = Ephi_curr;
-Ephi_targ(target_idx) = Ephi_targ(target_idx) * target_atten;
+target_atten = 0;
+theta_phi_arr = [THETA(:), PHI(:)]; % arrange coords to 2 col matrix
 
-% Build the c vector
-c_vec = [Etheta_targ; Ephi_targ];
-% Build the b vector
-b_vec = [Etheta_curr; Ephi_curr];
+% Build the b vector (existing field)
+Etheta_vec = Etheta(:); % The current theta field
+Ephi_vec = Ephi(:);     % The current phi field
+b_vec = [Etheta_vec; Ephi_vec];
+% Build the c vector (target field)
+[~, ~, ~, bw_troughs_bounds] = dish_analyzer.get_beam_width();
+target_mask = any((theta_phi_arr(:,1) < bw_troughs_bounds(1)) + (theta_phi_arr(:,1) > bw_troughs_bounds(2)), 3); % coords at which we want to attenuate
+c_vec = b_vec;
+c_vec(target_mask) = c_vec(target_mask)*target_atten;
+
+%temp;
+
 % build the d vector
 d_vec = c_vec - b_vec;
 
 M = numel(b_vec)/2; % divide by 2 because E has 2 components (theta and phi)
-N = 200; % number of dipoles added
+N = 100; % number of dipoles added
 dip_per_sl = M/N;
 
 % Build the Z matrix
 Zmn = zeros([2*M, N]); % times 2 because E has 2 components (theta and phi)
 dipoles = cell([N, 1]);
-I0 = 1e-9;
+I0 = 1e-6;
 l = 0.25*lambda0;
-%dipole_rho_location = linspace(-dish.d/2 + (dish.d/N)/2, dish.d/2 - (dish.d/N)/2, N);
-%dipole_rho_location = 0.5*linspace(-N + 1, N - 1, N)*lambda0*0.25;
 rho_loc = dish.d/2;
 dipole_phi_location = linspace(0,2*pi*(1-1/N),N);
+
+theta_range = THETA(1,:);
+
 for n = 1:N
     %rho_loc = dipole_rho_location(n);
     %[xd,yd,zd] = pol2cart(phi,rho_loc,dish.z0);
     phi_loc = dipole_phi_location(n);
     [xd,yd,zd] = pol2cart(phi_loc,rho_loc,dish.z0);
-    %dipole = DirectedDipole(I0,l,[xd,yd,zd],ff_r,theta_targ(ceil(n*dip_per_sl)),phi);
-    dipole = SimpleDipole(I0,l,[xd,yd,zd],[cos(phi_loc),sin(phi_loc),0]);
+    %dipole = DirectedDipole(I0,l,[xd,yd,zd],ff_r, theta_phi_arr(ceil(n*dip_per_sl),1) ,theta_phi_arr(ceil(n*dip_per_sl),2));
+    %dipole = SimpleDipole(I0,l,[xd,yd,zd],[cos(phi_loc),sin(phi_loc),0]);
+    %dipole = SimpleDipole(I0,l,[xd,yd,zd],[yd,-xd,zd]);
+    dipole = SimpleDipole(I0,l,[xd,yd,zd],[yd,-xd,zd]);
     dipoles{n} = dipole;
     for m = 1:M
         theta_targ = theta_phi_arr(m,1);
         phi_targ = theta_phi_arr(m,2);
-        [Etheta_dip, Ephi_dip] = dipole.E_calc(ff_r,theta_targ,phi_targ,freq,0);
+        [Etheta_dip, Ephi_dip] = dipole.E_calc([],theta_targ,phi_targ,freq,0);
         Zmn(m,n) = Etheta_dip; % m = 1..M is theta component
         Zmn(m+M,n) = Ephi_dip; % m = M+1...2M is phi component
     end
@@ -105,8 +107,8 @@ end
 a_vec = lsqr(Zmn, d_vec, 1e-6, 1000);
 
 % Superimpose the dipoles E-field on the dish E-field
-Etheta_sum = Etheta_curr;
-Ephi_sum = Ephi_curr;
+Etheta_sum = Etheta_vec;
+Ephi_sum = Ephi_vec;
 for n = 1:N
     dipole = dipoles{n};
     dipole.I0 = a_vec(n) * dipole.I0;
@@ -115,7 +117,7 @@ for n = 1:N
     for m = 1:M
         theta_targ = theta_phi_arr(m,1);
         phi_targ = theta_phi_arr(m,2);
-        [Etheta_dip_, Ephi_dip_] = dipole.E_calc(ff_r,theta_targ,phi_targ,freq,0);
+        [Etheta_dip_, Ephi_dip_] = dipole.E_calc([],theta_targ,phi_targ,freq,0);
         Etheta_dip(m) = Etheta_dip_;
         Ephi_dip(m) = Ephi_dip_;
     end
@@ -129,14 +131,27 @@ Emag_sum = sqrt(abs(Etheta_sum).^2 + abs(Ephi_sum).^2);
 Enorm_sum = Emag_sum / max(Emag_sum(:));
 % Convert to dB
 EdB_sum = 20 * log10(Enorm_sum);
-EdB_sum_mehsgrid = reshape(EdB_sum, size(THETA_FIELD));
+EdB_sum_mehsgrid = reshape(EdB_sum, size(THETA));
 
 %% Plot surface current magnitude
 % dish.plot(a);
 
 %% Plot 3D radiation pattern
 figure;
-dish_analyzer.plot_3d_rad_pattern(-60, E_dB, THETA_FIELD, PHI_FIELD, 1);
+dish_analyzer.plot_3d_rad_pattern(-50, EdB, THETA, PHI, 1);
 figure;
-dish_analyzer.plot_3d_rad_pattern(-60, EdB_sum_mehsgrid, THETA_FIELD, PHI_FIELD, 1);
+dish_analyzer.plot_3d_rad_pattern(-50, EdB_sum_mehsgrid, THETA, PHI, 1);
+
+% figure;
+% rad_pat_phi = pi/2;
+% [EdB_rad_pat, theta_range_rad_pat] = dish_analyzer.plot_2d_rad_pattern([],[],linspace(-0.05*pi, 0.05*pi, 500)+pi,rad_pat_phi);
+% 
+% 
+% %%
+% [bw_3dB, bw_troughs, ~, bw_troughs_bounds] = dish_analyzer.get_beam_width(rad_pat_phi, EdB_rad_pat, theta_range_rad_pat);
+% % [bw_3dB, bw_troughs, ~, bw_troughs_bounds] = dish_analyzer.get_beam_width(pi/2);
+% disp("etto... bleh");
+% disp(rad2deg(bw_3dB));
+% disp(rad2deg(bw_troughs));
+% disp(rad2deg(bw_troughs_bounds)-180);
 

@@ -7,6 +7,65 @@ classdef DishAnalyzer
         function obj = DishAnalyzer(dish)
             obj.dish = dish;
         end
+
+        function [bw_3dB, bw_troughs, bw_3dB_bounds, bw_troughs_bounds, bw_3dB_idx, bw_troughs_idx] = get_beam_width(obj, phi, EdB, theta_range)
+            if nargin < 2 || isempty(phi)
+                phi = 0;
+            end
+            EdB_specified = ~(nargin < 3 || isempty(EdB));
+            theta_range_specified = ~(nargin < 4 || isempty(theta_range));
+            % Get the default radiation pattern if EdB and theta_range not specified
+            if ~EdB_specified && ~theta_range_specified
+                theta_range = deg2rad([-15 15]+180);
+                [EdB, ~, ~, theta_range] = obj.get_2d_rad_pattern(phi, theta_range, 100);
+            end
+            % Get the default radiation pattern for the given range if specified
+            if ~EdB_specified && theta_range_specified
+                [EdB, ~, ~, ~] = obj.get_2d_rad_pattern(phi, [min(theta_range) max(theta_range)], numel(theta_range));
+            end
+            
+            EdB_neg = -EdB; % for finding troughs
+
+            % Find main lobe location (should be in the middle)
+            [ml_val, ml_idx] = max(EdB);
+            % Find troughs
+            [~, troughs_idx] = findpeaks(EdB_neg, 'MinPeakProminence', 3);
+            
+            % Look for the left and right troughs and calc the beam width
+            left_trough_idx = 0;
+            right_trough_idx = 0;
+            for i=1:numel(troughs_idx)
+                trough_idx = troughs_idx(i);
+                if trough_idx < ml_idx
+                    left_trough_idx = trough_idx;
+                else
+                    right_trough_idx = trough_idx;
+                    break;
+                end
+            end
+            bw_troughs = abs(theta_range(right_trough_idx) - theta_range(left_trough_idx));
+            bw_troughs_bounds = [theta_range(left_trough_idx) theta_range(right_trough_idx)];
+            bw_troughs_idx = [left_trough_idx right_trough_idx ];
+
+            % Now find the 3dB beam width
+            EdB_shifted = EdB - ml_val;
+            neg3dB = 20*log10(1/sqrt(2));
+            [~, first_3dB_idx] = min(abs(EdB_shifted-neg3dB));
+            if first_3dB_idx < ml_idx
+                [~, second_3dB_idx] = min(abs(EdB_shifted(ml_idx:end)-neg3dB));
+            else
+                [~, second_3dB_idx] = min(abs(EdB_shifted(1:ml_idx)-neg3dB));
+            end
+            bw_3dB = abs(theta_range(first_3dB_idx) - theta_range(second_3dB_idx));
+            if first_3dB_idx < second_3dB_idx
+                bw_3dB_bounds = [theta_range(first_3dB_idx) theta_range(second_3dB_idx)];
+                bw_3dB_idx = [first_3dB_idx second_3dB_idx];
+            else
+                bw_3dB_bounds = [theta_range(second_3dB_idx) theta_range(first_3dB_idx)];
+                bw_3dB_idx = [second_3dB_idx first_3dB_idx];
+            end
+            
+        end
         
         function [EdB, Etheta, Ephi, theta_range] = get_2d_rad_pattern(obj, phi, theta_bounds, theta_resolution)
             % Set phi to default of 0 if not specified
@@ -84,12 +143,22 @@ classdef DishAnalyzer
                 theta_shift = -pi;
             end
             theta_shift_deg = rad2deg(theta_shift);
-            
-            % Get the default radiation pattern if EdB and theta_range not specified
-            if nargin < 3 || isempty(EdB) || isempty(theta_range) || isempty(phi)
-                [EdB, ~, ~, theta_range] = obj.get_2d_rad_pattern();
+
+            EdB_specified = ~(nargin < 3 || isempty(EdB));
+            theta_range_specified = ~(nargin < 4 || isempty(theta_range));
+            phi_specified = ~(nargin < 5 || isempty(phi));
+            if ~phi_specified
                 phi = 0;
             end
+            % Get the default radiation pattern if EdB and theta_range not specified
+            if ~EdB_specified && ~theta_range_specified
+                [EdB, ~, ~, theta_range] = obj.get_2d_rad_pattern();
+            end
+            % Get the default radiation pattern for the given range if specified
+            if ~EdB_specified && theta_range_specified
+                [EdB, ~, ~, ~] = obj.get_2d_rad_pattern(phi, [min(theta_range) max(theta_range)], numel(theta_range));
+            end
+
             theta_range_deg = rad2deg(theta_range);
 
             %figure;
@@ -134,16 +203,62 @@ classdef DishAnalyzer
             
             % Use (E_dB_clipped - |dB_threashold|) for coloring so that dB values are in the range of [dB_threashold, 0].
             %figure;
-            surf(X_E, Y_E, Z_E*flip_z_mult, E_dB_clipped - abs(dB_threshold), 'EdgeColor', 'none');
+            surf(X_E, Y_E, Z_E * flip_z_mult, E_dB_clipped - abs(dB_threshold), ...
+                'EdgeColor', 'none', 'FaceAlpha', 1);
+
+            % Appearance tweaks for phased-array-style look
+            axis equal off
+            %colormap('turbo');  % Similar to Phased Array Toolbox colormap
+            shading interp
+            %camlight('right');
+            lighting gouraud
+            
+            view(135,20);
+            material dull
+            
+            % Colorbar and title
             cb = colorbar;
             ylabel(cb, 'Normalized Magnitude [dB]');
-            title('3D Radiation Pattern in Cartesian Coordinates');
-            xlabel('X');
-            ylabel('Y');
-            zlabel('Z');
-            axis equal;
-            shading interp;
-            grid on;
+            title('3D Response Pattern');
+            
+            hold on;
+
+            % Length of axes arrows
+            Lx = abs(max(X_E(:)) * 1.5);
+            Ly = abs(max(Y_E(:)) * 1.5);
+            Lz = abs(max(Z_E(:)) * 1.5);
+
+            light_pos = [Lx; Ly; Lz]/1.5;
+            light_pos = light_pos / norm(light_pos);
+            light_pos = rotz(40)*light_pos;
+            %light('Position', [0.0712 0.6836 0.7264]);
+            light('Position', light_pos);
+            
+            % Draw axis arrows
+            quiver3(0, 0, 0, Lx, 0, 0, 'k', 'LineWidth', 1, 'MaxHeadSize', 0.5); % X axis (red)
+            quiver3(0, 0, 0, 0, Ly, 0, 'k', 'LineWidth', 1, 'MaxHeadSize', 0.5); % Y axis (green)
+            quiver3(0, 0, 0, 0, 0, Lz, 'k', 'LineWidth', 1, 'MaxHeadSize', 0.5); % Z axis (blue)
+            
+            % Label the axes
+            text(Lx * 1.1, 0, 0, 'X', 'FontSize', 8);
+            text(0, Ly * 1.1, 0, 'Y', 'FontSize', 8);
+            text(0, 0, Lz * 1.1, 'Z', 'FontSize', 8);
+
+            hold off;
+
+            % Optional: Fix camera angle to match the MATLAB default polar view
+            %view(45, 30);  % Az 45°, El 30° – adjust as needed
+
+            % surf(X_E, Y_E, Z_E*flip_z_mult, E_dB_clipped - abs(dB_threshold), 'EdgeColor', 'none');
+            % cb = colorbar;
+            % ylabel(cb, 'Normalized Magnitude [dB]');
+            % title('3D Radiation Pattern in Cartesian Coordinates');
+            % xlabel('X');
+            % ylabel('Y');
+            % zlabel('Z');
+            % axis equal;
+            % shading interp;
+            % grid on;
         end
     end
 end

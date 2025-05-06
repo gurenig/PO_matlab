@@ -73,11 +73,14 @@ classdef ParabolicDish < handle
             if nargin < 4
                 error(message('NotEnoughInputs'));
             end
-
-            green = 1;
+            
             if nargin < 5 || isempty(usegreen)
+                usegreen = 1;
+            end
+
+            if ~isempty(r) && (usegreen > 0)
                 green = green3d(r, obj.k);
-            elseif usegreen == 0
+            else
                 green = 1;
             end
             
