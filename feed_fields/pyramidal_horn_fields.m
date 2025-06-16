@@ -19,6 +19,10 @@ function [Er, Etheta, Ephi, Hr, Htheta, Hphi] = pyramidal_horn_fields(eta, a, b,
     t1p = sqrt(1./(pi.*k.*rho2)) .* (-(k.*a1)./2 - kxp.*rho2); % t1'
     t2p = sqrt(1./(pi.*k.*rho2)) .* ((k.*a1)./2  - kxp.*rho2); % t2'
     
+    % Note: using fresnelc and fresnels takes a lot of time, and is the
+    % major contributor (almost 100%) to the time it takes to run this
+    % function
+
     I1 = 0.5 .* sqrt((pi.*rho2)./k) .* ...
         (exp((1i.*(kxp.^2).*rho2)./(2.*k)) .* ...
         (fresnelc(t2p)-fresnelc(t1p)-1i.*(fresnels(t2p)-fresnels(t1p))) ...

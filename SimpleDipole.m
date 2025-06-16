@@ -3,10 +3,7 @@ classdef SimpleDipole < handle
         I0       % [A]
         l        % [m]
         loc_vec  % 3x1 vec in cartesian
-    end
-
-    properties (Access = private)
-        dir_vec_ % 3x1 vec in cartesian (not normalized)
+        dir_vec_ % 3x1 vec in cartesian (not necessraily normalized)
     end
 
     properties (Dependent)
@@ -23,17 +20,14 @@ classdef SimpleDipole < handle
             obj.I0 = I0;
             obj.l = l;
             obj.loc_vec = loc_vec;
-            obj.dir_vec_ = dir_vec;
+            obj.dir_vec_ = dir_vec/norm(dir_vec);
         end
         
         function [Etheta, Ephi] = E_calc(obj, r, theta, phi, freq, usegreen)
             % Calculate omega and k
             omega = 2*pi*freq;
             k = omega*sqrt(obj.ep0*obj.mu0);
-            % Calculate R
-            % [x,y,z] = mysph2cart(r,theta,phi);
-            % R = sqrt((x-obj.loc_vec(1)).^2 + (y-obj.loc_vec(2)).^2 + (z-obj.loc_vec(3)).^2);
-
+            
             if nargin < 5
                 error(message('NotEnoughInputs'));
             end
@@ -47,19 +41,57 @@ classdef SimpleDipole < handle
             else
                 green = 1;
             end
+            
+            sinTheta = sin(theta);
+            cosTheta = cos(theta);
+            sinPhi = sin(phi);
+            cosPhi = cos(phi);
 
-            % Calculate A
-            A = obj.mu0*obj.I0*obj.l*green .* ...
-                exp(1i*k*( obj.loc_vec(1).*sin(theta).*cos(phi) + ...
-                           obj.loc_vec(2).*sin(theta).*sin(phi) + ...
-                           obj.loc_vec(3).*cos(theta) ));
-            Ax = obj.dir_vec(1)*A;
-            Ay = obj.dir_vec(2)*A;
-            Az = obj.dir_vec(3)*A;
-            % Convert A from cartesian to spherical and derive the E field
-            [~, Atheta, Aphi] = mycart2sphvec(Ax,Ay,Az,theta,phi);
-            Etheta = -1i*omega*Atheta;
-            Ephi = -1i*omega*Aphi;
+            % Compute A
+            krdot = k * ( ...
+                obj.loc_vec(1).*sinTheta.*cosPhi + ...
+                obj.loc_vec(2).*sinTheta.*sinPhi + ...
+                obj.loc_vec(3).*cosTheta);
+            A = obj.mu0 * obj.I0 * obj.l * green .* exp(1i * krdot);
+
+            % dir_vec_: [3x1]
+            dx = obj.dir_vec_(1);
+            dy = obj.dir_vec_(2);
+            dz = obj.dir_vec_(3);
+
+            % Create unit vectors in spherical coordinates, shape [N x M]
+            e_theta_x =  cosTheta .* cosPhi;
+            e_theta_y =  cosTheta .* cosPhi;
+            e_theta_z = -sinTheta;
+
+            e_phi_x = -sinPhi;
+            e_phi_y =  cosPhi;
+            e_phi_z =  zeros(size(theta));
+
+            % Project dipole direction onto spherical basis vectors (elementwise)
+            dir_dot_eth = dx * e_theta_x + dy * e_theta_y + dz * e_theta_z;
+            dir_dot_eph = dx * e_phi_x   + dy * e_phi_y   + dz * e_phi_z;
+
+            % Compute projected components
+            Atheta = A .* dir_dot_eth;
+            Aphi   = A .* dir_dot_eph;
+
+            % Compute E-field
+            Etheta = -1i * omega * Atheta;
+            Ephi   = -1i * omega * Aphi;
+
+            % % Calculate A
+            % A = obj.mu0*obj.I0*obj.l*green .* ...
+            %     exp(1i*k*( obj.loc_vec(1).*sin(theta).*cos(phi) + ...
+            %                obj.loc_vec(2).*sin(theta).*sin(phi) + ...
+            %                obj.loc_vec(3).*cos(theta) ));
+            % Ax = obj.dir_vec_(1)*A;
+            % Ay = obj.dir_vec_(2)*A;
+            % Az = obj.dir_vec_(3)*A;
+            % % Convert A from cartesian to spherical and derive the E field
+            % [~, Atheta, Aphi] = mycart2sphvec(Ax,Ay,Az,theta,phi);
+            % Etheta = -1i*omega*Atheta;
+            % Ephi = -1i*omega*Aphi;
         end
 
         function point_towards_target(obj, r, theta, phi)

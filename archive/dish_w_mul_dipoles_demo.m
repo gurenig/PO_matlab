@@ -15,7 +15,7 @@ k = omega*sqrt(ep0*mu0); % [1/m]
 % Dish antenna parameters
 f = 100*lambda0;    % [m]
 d = 1.66*f;         % [m]
-R = f/100;          % [m]
+R = d/100;          % [m]
 alpha = (1/2)*pi;   % [rad]
 
 % Aperture feed paramters
@@ -38,7 +38,7 @@ RIM = 2;
 %% Create dish and calculate surface current
 tic;
 
-rho_res = 200;
+rho_res = 100;
 phi_res = rho_res*2;
 t_res = rho_res*0.5;
 
@@ -60,7 +60,7 @@ tic;
 
 phi = 0;
 ff_theta_res = 1000;
-ff_theta_range_deg = linspace(-90,90,ff_theta_res);
+ff_theta_range_deg = linspace(-90,90,ff_theta_res)+180;
 ff_theta_range = deg2rad(ff_theta_range_deg);
 % ff_theta_range = linspace(0.5*pi,1.5*pi,ff_theta_res);
 ff_r = 10000*lambda0;
@@ -84,11 +84,11 @@ EdB = 20 * log10(Enorm);
 % locs_deg is the theta value in deg at which the maxima is achieved
 % locs_rad is the theta value in rad at which the maxima is achieved
 [peaks,locs_idx] = findpeaks(EdB, 'MinPeakProminence', 3);
-valid_peaks_mask = (peaks <= -3);
-peaks = peaks(valid_peaks_mask);
-locs_idx = locs_idx(valid_peaks_mask);
+peaks_valid_mask = peaks<=-3;
+peaks = peaks(peaks_valid_mask);
+locs_idx = locs_idx(peaks_valid_mask);
 locs_deg = ff_theta_range_deg(locs_idx);
-locs_rad = ff_theta_range(locs_idx);
+locs_rad = deg2rad(locs_deg);
 % pos mask
 locs_pos_mask = locs_deg>0.1;
 % neg mask
@@ -104,25 +104,48 @@ locs_deg_neg = locs_deg(locs_neg_mask);
 locs_rad_neg = locs_rad(locs_neg_mask);
 locs_idx_neg = locs_idx(locs_neg_mask);
 
-% Introduce a dipole pointing at the first side lobe
-loc_vec = [0,0,dish.z0]; % location of the dipole [x,y,z]
-dir_vec = [0,0,1]; % direction of the dipole [x,y,z]
+%lobes_to_reduce_idx = [locs_idx_neg(end-4) locs_idx_neg(end) locs_idx_pos(1) locs_idx_pos(4)];
+%lobes_to_reduce_idx = [locs_idx_neg(end)];
+%lobes_to_reduce_idx = [locs_idx_pos(1)];
+%lobes_to_reduce_idx = locs_idx_pos(1:3);
+first_pos_idx = find(locs_deg > 0, 1);
+num_sl_pairs = 1;
+targeted_lobes_mask = first_pos_idx-num_sl_pairs:first_pos_idx+num_sl_pairs-1;
+lobes_to_reduce_idx = locs_idx(targeted_lobes_mask);
+N = numel(lobes_to_reduce_idx);
+Etheta_sl = Etheta(lobes_to_reduce_idx);
+dipoles = cell([N, 1]);
+Zmn = zeros([N, N]);
 I0 = 1e-9;
 l = 0.25*lambda0;
+for n = 1:N
+    rho_loc = n*((dish.d/2)/N);
+    [xd,yd,zd] = pol2cart(phi,rho_loc,dish.z0);
+    dipole = DirectedDipole(I0,l,[xd,yd,zd], ff_r,ff_theta_range(lobes_to_reduce_idx(n)),phi);
+    dipoles{n} = dipole;
+    for m = 1:N
+        [Etheta_dip, Ephi_dip] = dipole.E_calc(ff_r,ff_theta_range(lobes_to_reduce_idx(m)),phi,freq);
+        Zmn(n,m) = Etheta_dip;
+    end
+end
 
-% Create dipole, find correct I0 and cancel the first right sidelobe
-targeted_loc = 1;
-dipole = DirectedDipole(I0,l,loc_vec,ff_r,locs_rad_pos(targeted_loc),phi);
-[Etheta_d, ~] = dipole.E_calc(ff_r,locs_rad_pos(targeted_loc),phi,freq);
-mult_I0 = -Etheta(locs_idx_pos(targeted_loc))/Etheta_d;
-dipole.I0 = dipole.I0 * mult_I0;
-[Etheta_d, Ephi_d] = arrayfun(@(theta) dipole.E_calc(ff_r, theta, phi, freq), ff_theta_range);
-Etheta_sum = Etheta + Etheta_d;
-Ephi_sum = Ephi + Ephi_d;
+err_vec = Etheta_sl*0.8;
+a_vec = (err_vec - Etheta_sl) / Zmn;
+
+Etheta_sum = Etheta;
+Ephi_sum = Ephi;
+for n = 1:N
+    dipole = dipoles{n};
+    dipole.I0 = a_vec(n) * dipole.I0;
+    [Etheta_dip, Ephi_dip] = arrayfun(@(theta) dipole.E_calc(ff_r,theta,phi,freq), ff_theta_range);
+    Etheta_sum = Etheta_sum + Etheta_dip;
+    Ephi_sum = Ephi_sum + Ephi_dip;
+end
+
 
 % Magnitude
 Emag_sum = sqrt(abs(Etheta_sum).^2 + abs(Ephi_sum).^2);
-% Normalize
+% Normalize relative to field w/o dipole
 Enorm_sum = Emag_sum / max(Emag(:));
 % Convert to dB
 EdB_sum = 20 * log10(Enorm_sum);
@@ -135,14 +158,14 @@ figure;
 plot(ff_theta_range_deg, EdB);
 hold on;
 plot(ff_theta_range_deg, EdB_sum);
-legend("w/o dipole", "w/ dipole");
-plot(locs_deg_pos, peaks_pos, 'rv', 'MarkerFaceColor', 'r');
-plot(locs_deg_neg, peaks_neg, 'rv', 'MarkerFaceColor', 'r');
+plot(locs_deg, peaks, 'rv', 'MarkerFaceColor', 'r');
+plot(locs_deg(targeted_lobes_mask), peaks(targeted_lobes_mask), 'rv', 'MarkerFaceColor', 'g');
+legend("w/o dipoles", "w/ dipoles", "peaks", "targeted peaks");
 title(sprintf('Radiation Pattern (phi = %0.0f°, Normalized Field in dB)', rad2deg(phi)));
 ylabel('Relative Magnitude [dB]');
 xlabel('\theta [deg]');
 xlim(rad2deg([min(ff_theta_range), max(ff_theta_range)]));
 yl = ylim;
-ylim([-60, yl(2)]);
+ylim([max(-40, yl(1)), yl(2)]);
 grid on;
 hold off;

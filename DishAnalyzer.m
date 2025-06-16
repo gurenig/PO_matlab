@@ -7,8 +7,11 @@ classdef DishAnalyzer
         function obj = DishAnalyzer(dish)
             obj.dish = dish;
         end
-
-        function [bw_3dB, bw_troughs, bw_3dB_bounds, bw_troughs_bounds, bw_3dB_idx, bw_troughs_idx] = get_beam_width(obj, phi, EdB, theta_range)
+        
+        %function [sll] = 
+        
+        function [bw_3dB, bw_troughs, bw_3dB_bounds, bw_troughs_bounds, ...
+                bw_3dB_idx, bw_troughs_idx, ml_theta, ml_idx] = get_beam_width(obj, phi, EdB, theta_range)
             if nargin < 2 || isempty(phi)
                 phi = 0;
             end
@@ -28,6 +31,7 @@ classdef DishAnalyzer
 
             % Find main lobe location (should be in the middle)
             [ml_val, ml_idx] = max(EdB);
+            ml_theta = theta_range(ml_idx);
             % Find troughs
             [~, troughs_idx] = findpeaks(EdB_neg, 'MinPeakProminence', 3);
             
@@ -47,23 +51,46 @@ classdef DishAnalyzer
             bw_troughs_bounds = [theta_range(left_trough_idx) theta_range(right_trough_idx)];
             bw_troughs_idx = [left_trough_idx right_trough_idx ];
 
-            % Now find the 3dB beam width
-            EdB_shifted = EdB - ml_val;
-            neg3dB = 20*log10(1/sqrt(2));
-            [~, first_3dB_idx] = min(abs(EdB_shifted-neg3dB));
-            if first_3dB_idx < ml_idx
-                [~, second_3dB_idx] = min(abs(EdB_shifted(ml_idx:end)-neg3dB));
+            % Find indices where EdB crosses the -3 dB level relative to main lobe
+            EdB_rel = EdB - ml_val;  % relative to peak
+            crossing_indices = find(diff(sign(EdB_rel + 3)) ~= 0);  % where curve crosses -3 dB
+            
+            % Find the two closest crossings around the peak
+            left_cross = crossing_indices(crossing_indices < ml_idx);
+            right_cross = crossing_indices(crossing_indices > ml_idx);
+            
+            if isempty(left_cross) || isempty(right_cross)
+                warning('Beam width could not be reliably determined. Assigning Inf.');
+                bw_3dB = Inf;
+                bw_3dB_bounds = [NaN NaN];
+                bw_3dB_idx = [NaN NaN];
             else
-                [~, second_3dB_idx] = min(abs(EdB_shifted(1:ml_idx)-neg3dB));
+                left_idx = left_cross(end);
+                right_idx = right_cross(1);
+                bw_3dB = abs(theta_range(right_idx) - theta_range(left_idx));
+                bw_3dB_bounds = [theta_range(left_idx), theta_range(right_idx)];
+                bw_3dB_idx = [left_idx, right_idx];
             end
-            bw_3dB = abs(theta_range(first_3dB_idx) - theta_range(second_3dB_idx));
-            if first_3dB_idx < second_3dB_idx
-                bw_3dB_bounds = [theta_range(first_3dB_idx) theta_range(second_3dB_idx)];
-                bw_3dB_idx = [first_3dB_idx second_3dB_idx];
-            else
-                bw_3dB_bounds = [theta_range(second_3dB_idx) theta_range(first_3dB_idx)];
-                bw_3dB_idx = [second_3dB_idx first_3dB_idx];
-            end
+            
+            % % Now find the 3dB beam width
+            % EdB_shifted = EdB - ml_val;
+            % neg3dB = 20*log10(1/sqrt(2));
+            % [~, first_3dB_idx] = min(abs(EdB_shifted-neg3dB));
+            % if first_3dB_idx < ml_idx
+            %     [~, second_3dB_idx] = min(abs(EdB_shifted(ml_idx:end)-neg3dB));
+            % else
+            %     [~, second_3dB_idx] = min(abs(EdB_shifted(1:ml_idx)-neg3dB));
+            % end
+            % 
+            % bw_3dB = abs(theta_range(first_3dB_idx) - theta_range(second_3dB_idx));
+            % 
+            % if first_3dB_idx < second_3dB_idx
+            %     bw_3dB_bounds = [theta_range(first_3dB_idx) theta_range(second_3dB_idx)];
+            %     bw_3dB_idx = [first_3dB_idx second_3dB_idx];
+            % else
+            %     bw_3dB_bounds = [theta_range(second_3dB_idx) theta_range(first_3dB_idx)];
+            %     bw_3dB_idx = [second_3dB_idx first_3dB_idx];
+            % end
             
         end
         
@@ -96,6 +123,19 @@ classdef DishAnalyzer
             Enorm = Emag / max(Emag(:));
             % Convert to dB
             EdB = 20 * log10(Enorm);
+        end
+        
+        function [sl_idx, sl_theta, sl_val, ml_idx, ml_theta] = get_sidelobes(obj, EdB, theta_range)
+            [peaks,locs_idx] = findpeaks(EdB, 'MinPeakProminence', 1);
+            sl_mask = (peaks <= -3);
+
+            sl_idx = locs_idx(sl_mask);
+            sl_theta = theta_range(sl_idx);
+            sl_val = peaks(sl_mask);
+
+            ml_idx = locs_idx(~sl_mask);
+            ml_idx = ml_idx(1); % making sure to ignore double detection
+            ml_theta = theta_range(ml_idx);
         end
 
         function [EdB, Etheta, Ephi, THETA, PHI] = get_3d_rad_pattern(obj, theta_resolution, phi_resolution)
@@ -136,6 +176,13 @@ classdef DishAnalyzer
             EdB = 20 * log10(Enorm);
         end
         
+        function [EdB, theta_range, idx] = extract_2d_rad_pattern_from_3d(obj, EdB, THETA, PHI, phi)
+            theta_range = THETA(1,:);
+            phi_range = PHI(:,1);
+            [~,idx] = min(abs(phi_range - phi));
+            EdB = EdB(idx,:);
+        end
+
         % Make sure to write a `figure;` line before calling this function
         function [EdB, theta_range] = plot_2d_rad_pattern(obj, theta_shift, EdB, theta_range, phi)
             % Set theta_shift to -pi if not specified
@@ -226,7 +273,7 @@ classdef DishAnalyzer
             % Length of axes arrows
             Lx = abs(max(X_E(:)) * 1.5);
             Ly = abs(max(Y_E(:)) * 1.5);
-            Lz = abs(max(Z_E(:)) * 1.5);
+            Lz = abs(max(Z_E(:) * flip_z_mult) * 1.2);
 
             light_pos = [Lx; Ly; Lz]/1.5;
             light_pos = light_pos / norm(light_pos);
@@ -237,12 +284,12 @@ classdef DishAnalyzer
             % Draw axis arrows
             quiver3(0, 0, 0, Lx, 0, 0, 'k', 'LineWidth', 1, 'MaxHeadSize', 0.5); % X axis (red)
             quiver3(0, 0, 0, 0, Ly, 0, 'k', 'LineWidth', 1, 'MaxHeadSize', 0.5); % Y axis (green)
-            quiver3(0, 0, 0, 0, 0, Lz, 'k', 'LineWidth', 1, 'MaxHeadSize', 0.5); % Z axis (blue)
+            quiver3(0, 0, 0, 0, 0, Lz, 'k', 'LineWidth', 1, 'MaxHeadSize', 0.1); % Z axis (blue)
             
             % Label the axes
             text(Lx * 1.1, 0, 0, 'X', 'FontSize', 8);
             text(0, Ly * 1.1, 0, 'Y', 'FontSize', 8);
-            text(0, 0, Lz * 1.1, 'Z', 'FontSize', 8);
+            text(0, 0, Lz * 0.95, 'Z', 'FontSize', 8);
 
             hold off;
 
