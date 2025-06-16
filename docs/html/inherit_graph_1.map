@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classhandle.html" title=" " alt="" coords="5,32,71,60"/>
+<area shape="rect" id="Node000001" href="$class_parabolic_dish.html" title="Models a parabolic reflector dish with a circular rim." alt="" coords="119,5,228,33"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="86,34,118,27,119,33,87,39"/>
+<area shape="rect" id="Node000002" href="$class_simple_dipole.html" title="Models a Hertzian dipole for far&#45;field calculations." alt="" coords="119,57,228,85"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="86,52,119,58,118,64,85,57"/>
+<area shape="rect" id="Node000003" href="$class_directed_dipole.html" title="Subclass of SimpleDipole that automatically points toward a target." alt="" coords="276,57,394,85"/>
+<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="243,68,275,68,275,74,243,74"/>
+</map>

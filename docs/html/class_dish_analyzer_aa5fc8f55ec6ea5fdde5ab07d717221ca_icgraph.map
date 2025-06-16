@@ -1,0 +1,14 @@
+<map id="get_3d_rad_pattern" name="get_3d_rad_pattern">
+<area shape="rect" id="Node000001" title="Computes full 3D radiation pattern over theta and phi." alt="" coords="638,55,785,82"/>
+<area shape="rect" id="Node000002" href="$class_dish_analyzer.html#afcc9689465e2f576efb68a149d6c2dcc" title="Finds sidelobes and main lobe in a 2D pattern." alt="" coords="478,55,590,82"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="622,71,590,71,590,66,622,66"/>
+<area shape="rect" id="Node000003" href="$class_dish_analyzer.html#a671d6f50ccf5564fcb11a63ad1d570b1" title="Returns a 2D radiation pattern at a fixed phi cut." alt="" coords="283,29,430,57"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="462,61,430,56,431,51,463,56"/>
+<area shape="rect" id="Node000004" href="$class_dish_analyzer.html#ac2ffb26d6f42d3bbcd7847b0873403f4" title="Computes the 3dB and trough&#45;based beamwidths from a 2D pattern." alt="" coords="161,29,235,57"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="268,55,235,54,236,48,268,49"/>
+<area shape="poly" id="edge7_Node000004_Node000002" title=" " alt="" coords="251,59,283,66,386,73,478,70,478,76,386,78,283,71,249,64"/>
+<area shape="poly" id="edge6_Node000004_Node000003" title=" " alt="" coords="250,32,283,32,283,37,251,37"/>
+<area shape="poly" id="edge5_Node000004_Node000004" title=" " alt="" coords="220,16,212,10,198,8,184,10,176,14,174,20,178,28,173,30,169,20,172,11,182,5,198,3,214,5,223,11"/>
+<area shape="rect" id="Node000005" href="$class_dish_analyzer.html#ae6b332756eb3d4e820a00af1e66898d7" title="Constructor." alt="" coords="5,29,113,57"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="145,46,113,46,113,40,145,40"/>
+</map>
