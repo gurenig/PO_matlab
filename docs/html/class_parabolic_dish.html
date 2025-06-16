@@ -52,6 +52,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="class_parabolic_dish-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">ParabolicDish Class Reference</div></div>
@@ -136,6 +137,13 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a609924508ede4472c1f8bc3b396b244f"><td class="mdescLeft">&#160;</td><td class="mdescRight">z-coordinate of the dish vertex relative to the paraboloid  <br /></td></tr>
 <tr class="memitem:af6f4b564e9f2e58c624f06e3f84912ce" id="r_af6f4b564e9f2e58c624f06e3f84912ce"><td class="memItemLeft" align="right" valign="top">Property&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af6f4b564e9f2e58c624f06e3f84912ce">theta0</a></td></tr>
 <tr class="memdesc:af6f4b564e9f2e58c624f06e3f84912ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Angle between the dish edge and the focal axis [rad].  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pri-methods" class="groupheader"><a id="pri-methods" name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:a508471edd78c39b54eb1159ab3aa3877" id="r_a508471edd78c39b54eb1159ab3aa3877"><td class="memItemLeft" align="right" valign="top">function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a508471edd78c39b54eb1159ab3aa3877">surface_dish</a> (in obj)</td></tr>
+<tr class="memdesc:a508471edd78c39b54eb1159ab3aa3877"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates the parametric surface of the parabolic dish reflector.  <br /></td></tr>
+<tr class="memitem:a8e40bd12f03c4c397d56270d27153af9" id="r_a8e40bd12f03c4c397d56270d27153af9"><td class="memItemLeft" align="right" valign="top">function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8e40bd12f03c4c397d56270d27153af9">surface_rim</a> (in obj)</td></tr>
+<tr class="memdesc:a8e40bd12f03c4c397d56270d27153af9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates the parametric surface of the dish rim (roll-off region).  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pri-attribs" class="groupheader"><a id="pri-attribs" name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -334,6 +342,74 @@ Private Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a508471edd78c39b54eb1159ab3aa3877" name="a508471edd78c39b54eb1159ab3aa3877"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a508471edd78c39b54eb1159ab3aa3877">&#9670;&#160;</a></span>surface_dish()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">function surface_dish </td>
+          <td>(</td>
+          <td class="paramtype">in</td>          <td class="paramname"><span class="paramname"><em>obj</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel private">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Generates the parametric surface of the parabolic dish reflector. </p>
+<p>This method computes the 3D Cartesian coordinates (X, Y, Z) of the reflective parabolic surface based on the paraboloid equation z = f - rho^2 / (4f), where <span class="tt">f</span> is the focal length. It also calculates surface normals (nx, ny, nz) and the surface Jacobian for integration.</p>
+<ul>
+<li>The surface is discretized using <span class="tt">rho_res</span> and <span class="tt">phi_res</span>.</li>
+<li>Normals are derived from the gradient of the paraboloid.</li>
+<li>The Jacobian is computed as RHO * sqrt(1 + (RHO/(2f))^2) for accurate surface integration.</li>
+</ul>
+<dl class="section note"><dt>Note</dt><dd>This function populates <span class="tt">X{1}</span>, <span class="tt">Y{1}</span>, <span class="tt">Z{1}</span>, <span class="tt">nx{1}</span>, <span class="tt">ny{1}</span>, <span class="tt">nz{1}</span>, and <span class="tt">jacobian{1}</span>. </dd></dl>
+
+</div>
+</div>
+<a id="a8e40bd12f03c4c397d56270d27153af9" name="a8e40bd12f03c4c397d56270d27153af9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e40bd12f03c4c397d56270d27153af9">&#9670;&#160;</a></span>surface_rim()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">function surface_rim </td>
+          <td>(</td>
+          <td class="paramtype">in</td>          <td class="paramname"><span class="paramname"><em>obj</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel private">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Generates the parametric surface of the dish rim (roll-off region). </p>
+<p>This method computes the coordinates, surface normals, and Jacobian for the rim region at the edge of the parabolic reflector. The rim is modeled as a circular arc orthogonal to the paraboloid.</p>
+<ul>
+<li>The rim is defined using polar arc equations r(t) and z(t) derived from the parabola edge.</li>
+<li>The arc is defined with radius <span class="tt">R</span> and offset based on geometric constraints to ensure smooth junction.</li>
+<li>Normals and Jacobians are calculated for proper field and current integration.</li>
+</ul>
+<dl class="section note"><dt>Note</dt><dd>This function populates <span class="tt">X{2}</span>, <span class="tt">Y{2}</span>, <span class="tt">Z{2}</span>, <span class="tt">nx{2}</span>, <span class="tt">ny{2}</span>, <span class="tt">nz{2}</span>, and <span class="tt">jacobian{2}</span>. </dd></dl>
 
 </div>
 </div>
