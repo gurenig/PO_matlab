@@ -1,0 +1,12 @@
+<map id="function" name="function">
+<area shape="rect" id="Node000001" title="Computes the 3dB and trough&#45;based beamwidths from a 2D pattern." alt="" coords="360,68,434,96"/>
+<area shape="poly" id="edge2_Node000001_Node000001" title=" " alt="" coords="420,54,412,49,397,47,383,49,375,53,373,59,377,66,372,69,368,59,371,50,381,44,397,41,414,44,423,50"/>
+<area shape="rect" id="Node000002" href="$class_dish_analyzer.html#ae6b332756eb3d4e820a00af1e66898d7" title="Constructor." alt="" coords="203,5,310,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="349,64,288,36,290,31,351,59"/>
+<area shape="rect" id="Node000003" href="$class_dish_analyzer.html#a671d6f50ccf5564fcb11a63ad1d570b1" title="Returns a 2D radiation pattern at a fixed phi cut." alt="" coords="5,68,153,96"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="345,91,153,92,153,87,344,86"/>
+<area shape="rect" id="Node000004" href="$class_dish_analyzer.html#afcc9689465e2f576efb68a149d6c2dcc" title="Finds sidelobes and main lobe in a 2D pattern." alt="" coords="201,131,312,158"/>
+<area shape="poly" id="edge5_Node000001_Node000004" title=" " alt="" coords="351,105,290,133,288,128,349,100"/>
+<area shape="poly" id="edge4_Node000003_Node000001" title=" " alt="" coords="168,71,360,73,360,79,168,76"/>
+<area shape="poly" id="edge6_Node000004_Node000003" title=" " alt="" coords="200,128,119,99,121,94,202,122"/>
+</map>
