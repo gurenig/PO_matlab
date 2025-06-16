@@ -1,3 +1,22 @@
+%> @file ga_cost_fun1.m
+%> @brief Cost function for GA-based dipole optimization on a dish antenna.
+%>
+%> This function computes a composite cost based on sidelobe level (SLL), beamwidth,
+%> and peak direction deviation. It is designed to be minimized by a genetic algorithm.
+%>
+%> @param x             Vector of optimization variables [amplitudes, phases].
+%> @param dish          ParabolicDish object representing the reflector geometry.
+%> @param dish_analyzer DishAnalyzer object for evaluating radiation characteristics.
+%> @param dipoles       Cell array of SimpleDipole objects, used to superimpose additional fields.
+%> @param Etheta        Baseline θ-component of the electric field (1D array).
+%> @param Ephi          Baseline φ-component of the electric field (1D array).
+%> @param phi           Azimuthal angle (scalar) for fixed φ slice analysis [rad].
+%> @param theta_range   Vector of θ angles at which far-field is evaluated [rad].
+%>
+%> @retval cost         Composite cost value to be minimized by the GA.
+
+
+
 function cost = ga_cost_fun1(x, dish, dish_analyzer, dipoles, Etheta, Ephi, phi, theta_range)
     N = numel(dipoles);
     freq = dish.omega / (2*pi);

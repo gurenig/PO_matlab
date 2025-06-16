@@ -1,3 +1,29 @@
+%> @file dish_w_dipole_lsqr_3d_mulrings.m
+%> @brief Performs 3D sidelobe suppression for a parabolic dish using multiple dipole rings and LSQR optimization.
+%>
+%> This script simulates a parabolic dish antenna and uses a set of strategically placed dipoles
+%> (arranged in multiple concentric rings) to reduce the sidelobe levels of its radiation pattern.
+%> The process involves computing the far-field radiation, masking the main lobe, and solving
+%> a least-squares problem to compute optimal dipole currents that minimize unwanted radiation.
+%>
+%> @section inputs Inputs
+%> - Dish geometry: focal length, aperture diameter, rim radius, and alpha angle
+%> - Feed parameters: frequency, E-field amplitude, and aperture radius
+%> - Dipole ring configuration: number of rings, dipoles per ring, ring spacing
+%> - Resolution settings for far-field computation
+%>
+%> @section outputs Outputs
+%> - Updated 3D radiation pattern with dipoles superimposed
+%> - 2D slices of radiation pattern for specific phi angles (0 and π/2)
+%> - Surface current visualization with dipole locations marked
+%>
+%> @section notes Notes
+%> - Dipole symmetry is enforced using an anti-symmetric transform matrix.
+%> - Only the masked (non-main-lobe) regions are targeted for suppression.
+%> - Requires `DishAnalyzer` and `SimpleDipole` classes to operate.
+%> - Suppression level is hardcoded via `target_atten` and `atten`.
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

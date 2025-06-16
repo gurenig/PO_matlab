@@ -1,3 +1,27 @@
+%> @file lsqr_target_peaks_first_sl_2d.m
+%> @brief Suppresses the first sidelobes in a 2D far-field slice using LSQR optimization.
+%>
+%> This script analyzes a 2D radiation slice of a parabolic dish antenna and identifies the first
+%> pair of sidelobes (above and below the main beam) at a fixed azimuthal angle. It places one or more
+%> dipoles near the focal point and optimizes their current using a least-squares approach to suppress
+%> the sidelobe levels. The resulting field is superimposed to observe the improvement.
+%>
+%> @section inputs Inputs
+%> - Parabolic dish geometry and sampling resolution
+%> - Aperture field function for primary feed excitation
+%> - Far-field extraction at a specific azimuthal angle
+%>
+%> @section outputs Outputs
+%> - Plots of radiation pattern before and after sidelobe suppression
+%> - Visual marker of dipole placement on dish geometry
+%> - Interactive slider to browse far-field slices by phi
+%>
+%> @section notes Notes
+%> - Only the first sidelobe pair is targeted.
+%> - Dipole configuration is customizable; the default places a single dipole at the focus.
+%> - Use of `DishAnalyzer` and `SimpleDipole` classes is required.
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

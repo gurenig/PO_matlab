@@ -1,3 +1,34 @@
+%> @file dish_w_dipole_demo.m
+%> @brief Demonstrates single-dipole sidelobe cancellation on a dish antenna pattern.
+%>
+%> This script simulates a parabolic dish antenna excited by a circular aperture feed.
+%> It computes the far-field radiation pattern along a fixed phi-plane, identifies sidelobes,
+%> and places a single `DirectedDipole` element at the feed location to suppress one targeted sidelobe.
+%> The dipole current is calculated analytically to achieve approximate field cancellation.
+%>
+%> @section KeyFeatures
+%> @li Generates far-field radiation pattern of a parabolic reflector using physical optics.
+%> @li Identifies side lobes using `findpeaks` in dB space.
+%> @li Selects the first right-side lobe and cancels it using one directional dipole.
+%> @li Uses a simple linear scaling of dipole current to match and negate sidelobe magnitude.
+%> @li Compares the resulting radiation pattern before and after dipole addition.
+%>
+%> @section Parameters
+%> @li Frequency: 2.5 GHz
+%> @li Dish focal length: 20 × λ₀
+%> @li Dipole length: λ₀/4
+%> @li Number of dipoles: 1 (pointing upward)
+%> @li Far-field evaluation range: -90° to +90° (in θ), fixed φ = 0°
+%>
+%> @note This script does not consider mutual coupling or iterative optimization.
+%> @note Uses `DirectedDipole` for directional radiation control.
+%>
+%> @see ParabolicDish
+%> @see DirectedDipole
+%> @see circ_aperture_fields
+
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

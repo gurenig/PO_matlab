@@ -1,3 +1,21 @@
+%> @file dish_dipole_ga_demo.m
+%> @brief Demonstration script for dipole-based sidelobe suppression using a genetic algorithm.
+%>
+%> This script initializes a parabolic dish antenna, calculates its surface current and far-field 
+%> pattern, and then applies a ring of dipoles around the dish to suppress sidelobes using a GA 
+%> optimization. The optimization minimizes a cost function that penalizes high SLL, wide beamwidth, 
+%> and main lobe deviation. The script also visualizes the final field pattern and dipole configuration.
+%>
+%> Steps:
+%> - Define physical and dish parameters
+%> - Load or calculate far-field data
+%> - Define dipole locations and initialize them
+%> - Set GA bounds and options
+%> - Run GA using @c ga_cost_fun1 and @c boresight_null_constraint
+%> - Visualize current, optimized field pattern, and excitation symmetry
+
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

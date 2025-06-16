@@ -1,3 +1,33 @@
+%> @file dish_w_mul_dipoles_demo.m
+%> @brief Demonstrates selective sidelobe reduction in a dish antenna using multiple dipoles.
+%>
+%> This script constructs a parabolic dish illuminated by a circular aperture, computes its far-field 
+%> radiation pattern in a given phi plane, and then reduces selected sidelobes using individually placed
+%> `DirectedDipole` elements. A linear system is solved to obtain dipole excitations that suppress
+%> the field strength in selected directions.
+%>
+%> @section KeyFeatures
+%> @li Constructs a parabolic reflector surface and computes surface currents from a user-defined feed.
+%> @li Computes the far-field E-theta and E-phi components over a fixed phi-plane and a theta sweep.
+%> @li Identifies sidelobe peaks using peak finding (`findpeaks`) and selects a subset to reduce.
+%> @li Places dipoles near the feed and solves a linear system for current values that cancel out selected lobes.
+%> @li Superimposes dipole radiation with dish pattern and compares before/after effects on radiation pattern.
+%>
+%> @section Parameters
+%> @li Frequency: 2.5 GHz
+%> @li Dish focal length: 100 × λ₀
+%> @li Far-field distance: 10000 × λ₀
+%> @li Number of dipoles: equal to number of selected sidelobe peaks
+%> @li Sidelobe suppression target: 80% reduction
+%>
+%> @note The script uses a simplified model for dipole radiation and does not include mutual coupling effects.
+%> @note Uses `DirectedDipole` class for directional dipole pattern modeling.
+%>
+%> @see ParabolicDish
+%> @see DirectedDipole
+%> @see circ_aperture_fields
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

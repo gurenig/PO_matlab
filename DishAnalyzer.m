@@ -1,15 +1,36 @@
+%> @file DishAnalyzer.m
+%> @class DishAnalyzer
+%> @brief Provides analysis tools for extracting radiation pattern features from a ParabolicDish object.
+%>
+%> This class includes utilities to compute beamwidths, identify sidelobes, and generate 2D and 3D radiation pattern data from a given ParabolicDish instance.
+
 classdef DishAnalyzer    
     properties
+        %> Handle to a ParabolicDish instance
         dish
     end
 
     methods
+        %> @brief Constructor
+        %> @param dish A ParabolicDish object
         function obj = DishAnalyzer(dish)
             obj.dish = dish;
         end
         
-        %function [sll] = 
-        
+        %> @brief Computes the 3dB and trough-based beamwidths from a 2D pattern
+        %>
+        %> @param phi Azimuthal angle [rad] (default = 0)
+        %> @param EdB Optional 2D pattern values [dB]
+        %> @param theta_range Optional theta values [rad]
+        %>
+        %> @retval bw_3dB Width between -3dB crossings
+        %> @retval bw_troughs Width between adjacent troughs
+        %> @retval bw_3dB_bounds Theta limits of 3dB beamwidth
+        %> @retval bw_troughs_bounds Theta limits of trough-based beamwidth
+        %> @retval bw_3dB_idx Indices of 3dB points
+        %> @retval bw_troughs_idx Indices of trough points
+        %> @retval ml_theta Theta of main lobe
+        %> @retval ml_idx Index of main lobe peak
         function [bw_3dB, bw_troughs, bw_3dB_bounds, bw_troughs_bounds, ...
                 bw_3dB_idx, bw_troughs_idx, ml_theta, ml_idx] = get_beam_width(obj, phi, EdB, theta_range)
             if nargin < 2 || isempty(phi)
@@ -94,6 +115,16 @@ classdef DishAnalyzer
             
         end
         
+        %> @brief Returns a 2D radiation pattern at a fixed phi cut.
+        %>
+        %> @param phi Azimuth angle [rad] (default = 0)
+        %> @param theta_bounds [min max] bounds on theta [rad] (default = [0.5pi, 1.5pi])
+        %> @param theta_resolution Number of samples across theta (default = 500)
+        %>
+        %> @retval EdB Normalized E-field [dB]
+        %> @retval Etheta Theta-polarized E-field
+        %> @retval Ephi Phi-polarized E-field
+        %> @retval theta_range Array of theta values [rad]
         function [EdB, Etheta, Ephi, theta_range] = get_2d_rad_pattern(obj, phi, theta_bounds, theta_resolution)
             % Set phi to default of 0 if not specified
             if nargin < 2 || isempty(phi)
@@ -125,6 +156,16 @@ classdef DishAnalyzer
             EdB = 20 * log10(Enorm);
         end
         
+        %> @brief Finds sidelobes and main lobe in a 2D pattern.
+        %>
+        %> @param EdB Radiation pattern [dB]
+        %> @param theta_range Corresponding theta values [rad]
+        %>
+        %> @retval sl_idx Indices of sidelobes
+        %> @retval sl_theta Theta values of sidelobes
+        %> @retval sl_val dB levels of sidelobes
+        %> @retval ml_idx Index of main lobe
+        %> @retval ml_theta Theta value of main lobe
         function [sl_idx, sl_theta, sl_val, ml_idx, ml_theta] = get_sidelobes(obj, EdB, theta_range)
             [peaks,locs_idx] = findpeaks(EdB, 'MinPeakProminence', 1);
             sl_mask = (peaks <= -3);
@@ -137,7 +178,17 @@ classdef DishAnalyzer
             ml_idx = ml_idx(1); % making sure to ignore double detection
             ml_theta = theta_range(ml_idx);
         end
-
+        
+        %> @brief Computes full 3D radiation pattern over theta and phi.
+        %>
+        %> @param theta_resolution Number of theta samples (default = 100)
+        %> @param phi_resolution Number of phi samples (default = 100)
+        %>
+        %> @retval EdB Normalized E-field [dB]
+        %> @retval Etheta Theta-polarized E-field matrix
+        %> @retval Ephi Phi-polarized E-field matrix
+        %> @retval THETA Meshgrid of theta values [rad]
+        %> @retval PHI Meshgrid of phi values [rad]
         function [EdB, Etheta, Ephi, THETA, PHI] = get_3d_rad_pattern(obj, theta_resolution, phi_resolution)
             % Set theta resolution to default of 100 if not specified
             if nargin < 2 || isempty(theta_resolution)
@@ -176,14 +227,33 @@ classdef DishAnalyzer
             EdB = 20 * log10(Enorm);
         end
         
+        %> @brief Extracts a 2D slice from a 3D radiation pattern at a given phi.
+        %>
+        %> @param EdB 3D pattern matrix
+        %> @param THETA Grid of theta values [rad]
+        %> @param PHI Grid of phi values [rad]
+        %> @param phi Slice angle to extract [rad]
+        %>
+        %> @retval EdB 2D pattern slice [dB]
+        %> @retval theta_range Corresponding theta array
+        %> @retval idx Index of phi slice used
         function [EdB, theta_range, idx] = extract_2d_rad_pattern_from_3d(obj, EdB, THETA, PHI, phi)
             theta_range = THETA(1,:);
             phi_range = PHI(:,1);
             [~,idx] = min(abs(phi_range - phi));
             EdB = EdB(idx,:);
         end
-
+        
         % Make sure to write a `figure;` line before calling this function
+        %> @brief Plots the 2D radiation pattern (normalized)
+        %>
+        %> @param theta_shift Shift applied to theta axis [rad] (default = -pi)
+        %> @param EdB Optional pattern data [dB]
+        %> @param theta_range Optional theta values [rad]
+        %> @param phi Azimuthal cut angle [rad] (default = 0)
+        %>
+        %> @retval EdB Computed or passed-in pattern [dB]
+        %> @retval theta_range Theta values [rad]
         function [EdB, theta_range] = plot_2d_rad_pattern(obj, theta_shift, EdB, theta_range, phi)
             % Set theta_shift to -pi if not specified
             if nargin < 2 || isempty(theta_shift)
@@ -220,6 +290,17 @@ classdef DishAnalyzer
         end
         
         % Make sure to write a `figure;` line before calling this function
+        %> @brief Plots the 3D radiation pattern using a spherical projection.
+        %>
+        %> @param dB_threshold Threshold cutoff in dB (default = -60)
+        %> @param EdB Optional precomputed 3D pattern [dB]
+        %> @param THETA Optional theta meshgrid [rad]
+        %> @param PHI Optional phi meshgrid [rad]
+        %> @param flip_z_flag Optional flag to invert Z (default = no flip)
+        %>
+        %> @retval EdB 3D pattern [dB]
+        %> @retval THETA Theta meshgrid [rad]
+        %> @retval PHI Phi meshgrid [rad]
         function [EdB, THETA, PHI] = plot_3d_rad_pattern(obj, dB_threshold, EdB, THETA, PHI, flip_z_flag)
             % Set the dB threshold to -60 if not specified
             if nargin < 2 || isempty(dB_threshold)

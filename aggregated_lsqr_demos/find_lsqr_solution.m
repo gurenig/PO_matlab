@@ -1,3 +1,37 @@
+%> @file find_lsqr_solution.m
+%> @brief Computes least-squares dipole excitations to reduce sidelobes in a dish antenna radiation pattern.
+%>
+%> This function takes an existing radiation pattern and attempts to modify it by superimposing the fields
+%> from a ring of dipoles. The dipole currents are determined by solving a linear system via LSQR to match
+%> a target pattern (typically zero field) outside the main lobe.
+%>
+%> @param dish_analyzer DishAnalyzer object containing dish geometry and analysis tools.
+%> @param EdB Normalized far-field magnitude in dB (for display/analysis only).
+%> @param Etheta Complex far-field E-theta component from the dish.
+%> @param Ephi Complex far-field E-phi component from the dish.
+%> @param theta_range 1D array of theta angles at which far-fields are sampled.
+%> @param phi The azimuthal plane (fixed phi) in which the dipole pattern is optimized.
+%> @param N Number of dipoles to place around the ring.
+%> @param rho_loc Radial distance of dipoles from the dish center.
+%> @param phi_locs Array of azimuthal angles specifying dipole positions.
+%> @param freq Operating frequency [Hz].
+%>
+%> @retval a_vec The complex excitation vector (current amplitudes and phases) for each dipole.
+%> @retval dipoles A cell array of `SimpleDipole` objects used in the solution.
+%> @retval rectwin A rectangular window applied over the main lobe region for field preservation.
+%>
+%> @details
+%> The main lobe region is automatically detected via `get_beam_width`. Outside this region, the goal is to
+%> reduce the radiated field using a linear superposition of dipole patterns. The function builds a system matrix
+%> Zmn where each column is the field contribution from a dipole, and solves `Zmn * a = d` using LSQR.
+%>
+%> @note This function assumes dipoles are uniformly oriented in azimuth (tangential direction).
+%>
+%> @see SimpleDipole
+%> @see DishAnalyzer
+%> @see lsqr
+
+
 function [a_vec, dipoles, rectwin] = find_lsqr_solution(dish_analyzer, EdB, Etheta, Ephi, theta_range, phi, N, rho_loc, phi_locs, freq)
     [~, ~, ~, ~, ~, bw_troughs_idx] = dish_analyzer.get_beam_width(phi, EdB, theta_range);
     rectwin = zeros(size(theta_range));

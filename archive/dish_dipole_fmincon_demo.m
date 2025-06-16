@@ -1,3 +1,35 @@
+%> @file dish_dipole_fmincon_demo.m
+%> @brief Performs sidelobe reduction on a dish antenna using constrained optimization via `fmincon`.
+%>
+%> This script sets up a parabolic dish illuminated by a circular aperture, computes its far-field pattern,
+%> and then optimizes the currents of dipoles placed in a ring around the feed to suppress sidelobes.
+%> A nonlinear least-squares cost function is minimized using `fmincon`, subject to anti-symmetry constraints
+%> on the dipole currents to preserve main lobe symmetry.
+%>
+%> @section KeyFeatures
+%> @li Builds a parabolic reflector surface and computes induced surface currents using physical optics.
+%> @li Computes the far-field pattern in a fixed φ-plane.
+%> @li Constructs a system matrix (Zmn) that relates dipole excitations to far-field contribution.
+%> @li Uses `fmincon` to solve a constrained least-squares problem for dipole weights.
+%> @li Enforces anti-symmetry across the dipole ring to maintain main lobe direction.
+%> @li Plots the radiation pattern before and after dipole superposition.
+%>
+%> @section Parameters
+%> @li Frequency: 2.5 GHz
+%> @li Dish focal length: 20 × λ₀
+%> @li Dipole ring radius: 1.1 × (dish aperture radius)
+%> @li Number of dipoles: 50
+%> @li Optimization method: `fmincon` with anti-symmetry linear constraints
+%>
+%> @note The objective is to reduce sidelobes outside the main beam while preserving beam shape.
+%> @note Mutual coupling effects are not modeled.
+%>
+%> @see ParabolicDish
+%> @see SimpleDipole
+%> @see circ_aperture_fields
+%> @see fmincon
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

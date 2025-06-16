@@ -1,3 +1,30 @@
+%> @file dish_dipole_lsqr_demo_optspacingtests.m
+%> @brief Tests sidelobe suppression of a dish antenna using LSQR-optimized dipole placements with variable spacing.
+%>
+%> This script evaluates the effect of dipole ring radius and axial location (z-axis) on sidelobe suppression
+%> performance in a parabolic dish antenna. Dipoles are placed in a circular ring, and their influence on
+%> far-field patterns is assessed using a least-squares solution to minimize sidelobe energy outside the main beam.
+%>
+%> @section inputs Inputs
+%> - Dish parameters: focal length `f`, diameter `d`, curvature `R`, resolution parameters
+%> - Feed configuration: circular aperture with radius `a`, excitation `E0`, frequency `freq`
+%> - Dipole configuration: number of dipoles `N`, tested radius range `rho_loc_`, and z-height `z_loc_`
+%> - Windowing: rectangular window isolating the main beam for sidelobe suppression
+%>
+%> @section outputs Outputs
+%> - Relative residual values plotted as a function of dipole radial distance
+%> - Radiation pattern comparison (with vs without dipoles)
+%> - Visualization of optimal dipole spacing effects on LSQR error
+%>
+%> @section notes Notes
+%> - The script loops over different dipole ring radii and heights to find optimal suppression regions
+%> - Only one dipole configuration is visualized in the final field plot
+%> - Modify `N`, `z_loc_`, or `rho_loc_` for further exploration
+%>
+%> @see dish_dipole_lsqr_mulrings_demo.m for static ring configurations
+
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

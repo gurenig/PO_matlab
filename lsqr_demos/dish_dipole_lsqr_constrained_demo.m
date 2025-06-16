@@ -1,3 +1,28 @@
+%> @file dish_dipole_lsqr_constrained_demo.m
+%> @brief Demonstrates sidelobe suppression in a dish antenna using LSQR with antisymmetric dipole constraint.
+%>
+%> This script calculates the radiation pattern of a parabolic dish and uses a ring of symmetrically placed dipoles
+%> to reduce sidelobe levels through a constrained LSQR solution. The constraint enforces antisymmetry across each
+%> ring by coupling dipoles in opposite directions with equal and opposite currents.
+%>
+%> @section inputs Inputs
+%> - Parabolic dish geometry (focal length `f`, diameter `d`, curvature `R`)
+%> - Excitation parameters (feed power `E0`, frequency `freq`, aperture radius `a`)
+%> - Dipole configuration (number `N`, radius `rho_loc`, directional constraint)
+%> - Field sampling resolution (`theta_res`, `rho_res`, etc.)
+%> - Main lobe window extraction based on beamwidth troughs
+%>
+%> @section outputs Outputs
+%> - Optimized dipole currents with antisymmetric constraint
+%> - Modified far-field pattern after dipole superposition
+%> - Plots of radiation pattern before and after dipole optimization
+%>
+%> @section notes Notes
+%> - The matrix `T` enforces antisymmetry by pairing opposite dipoles with a positive and negative sign
+%> - Target region is outside the 3dB beamwidth, defined via `rectwin`
+%> - Uses `lsqr` to solve the reduced system for current weights under antisymmetry
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

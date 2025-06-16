@@ -1,3 +1,31 @@
+%> @file dish_demo.m
+%> @brief Demonstrates the simulation of a parabolic reflector antenna using physical optics.
+%>
+%> This script initializes a parabolic dish geometry, calculates the surface current induced
+%> by a circular aperture feed (or optionally a pyramidal horn), and computes the resulting 
+%> far-field radiation pattern in a 2D cut (θ-plane at fixed φ).
+%>
+%> Key features:
+%> - Constructs dish geometry and mesh
+%> - Evaluates induced surface current via the equivalence principle
+%> - Computes the radiated far-field pattern over θ at fixed φ
+%> - Plots both surface currents and the normalized E-field (in dB)
+%>
+%> @section Parameters
+%> @li Frequency: 2.5 GHz
+%> @li Feed: Circular aperture of radius a = 0.25λ₀
+%> @li Dish focal length: f = 20λ₀
+%> @li Far-field evaluation: 1000 points from θ = 90° to 270° at φ = 0
+%>
+%> @note The feed is defined as a lambda/4 radius uniform circular aperture.
+%> @note Includes optional pyramidal horn feed for comparison.
+%>
+%> @see ParabolicDish
+%> @see circ_aperture_fields
+%> @see pyramidal_horn_fields
+
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

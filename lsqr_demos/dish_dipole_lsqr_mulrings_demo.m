@@ -1,3 +1,31 @@
+%> @file dish_dipole_lsqr_mulrings_demo.m
+%> @brief Demonstration of sidelobe suppression in a parabolic dish using multiple dipole rings via LSQR optimization.
+%>
+%> This script simulates the radiation pattern of a parabolic reflector fed by a circular aperture.
+%> Dipoles arranged in concentric rings are introduced in front of the feed to suppress sidelobes while preserving the main lobe.
+%> The optimal dipole currents are computed using the least-squares solution of the field cancellation problem.
+%>
+%> @section inputs Inputs
+%> - Dish geometry: focal length `f`, diameter `d`, rim radius `R`, and half-angle `alpha`
+%> - Feed excitation: frequency `freq`, aperture radius `a`, and magnitude `E0`
+%> - Dipole arrangement: `num_rings` × `num_dipoles_per_ring`, spaced in concentric rings
+%> - Target suppression: sidelobes outside the main beam region are selected via a rectangular window
+%>
+%> @section outputs Outputs
+%> - Superimposed radiation pattern with dipole corrections
+%> - Plots of the dish surface current and 2D radiation pattern
+%> - Dipole positions overlaid for visualization
+%>
+%> @section usage Usage
+%> - Run the script to visualize dipole-assisted sidelobe suppression
+%> - Adjust dipole ring parameters and windowing bounds to study different suppression strategies
+%>
+%> @note
+%> - This script performs 2D slice analysis at a fixed azimuth angle (`phi = 0`)
+%> - Antisymmetric dipole pairing (matrix `T`) is used to preserve the main lobe
+%> - For a full 3D version, see the `dish_w_dipole_lsqr_3d` variant
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

@@ -1,3 +1,33 @@
+%> @file lsqr_single_phi_in_3d.m
+%> @brief Performs sidelobe suppression on a dish antenna using dipole superposition, evaluated in both 2D and 3D far-field.
+%>
+%> This script generates a parabolic dish fed by a circular aperture, computes the far-field radiation pattern in 3D,
+%> selects a single phi-plane for sidelobe minimization, and computes optimal dipole currents using LSQR minimization.
+%> The resulting dipole excitation is evaluated in both the selected 2D cut and the full 3D radiation pattern.
+%>
+%> @section KeyFeatures
+%> @li Computes full 3D far-field radiation pattern from surface currents on a parabolic dish.
+%> @li Extracts a single phi-plane for sidelobe suppression and solves a least-squares system to find dipole excitations.
+%> @li Verifies anti-symmetry in optimized dipole currents.
+%> @li Visualizes radiation pattern improvements in both 2D and 3D domains.
+%> @li Uses the `find_lsqr_solution` helper to construct Zmn matrix and solve for `a_vec`.
+%>
+%> @section Parameters
+%> @li Frequency: 2.5 GHz
+%> @li Number of dipoles: 50
+%> @li Dipole ring radius: half the dish aperture
+%> @li Far-field resolution: 1000 (theta), 100 (phi)
+%>
+%> @note The `DirectedDipole` elements are placed in a ring around the feed and oriented outward.
+%> @note Superposition is used to evaluate the impact of dipoles on both the original 2D cut and entire 3D pattern.
+%>
+%> @see ParabolicDish
+%> @see DishAnalyzer
+%> @see find_lsqr_solution
+%> @see DirectedDipole
+
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

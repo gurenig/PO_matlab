@@ -1,3 +1,29 @@
+%> @file dish_w_dipole_lsqr_3d.m
+%> @brief Simulates 3D far-field radiation of a parabolic dish and suppresses sidelobes using LSQR optimization with a single dipole ring.
+%>
+%> This script constructs a parabolic dish antenna, computes its far-field radiation pattern,
+%> and uses a ring of dipoles placed in front of the feed to suppress sidelobes via least-squares minimization.
+%> The main lobe is preserved by masking it from the optimization target.
+%>
+%> @section inputs Inputs
+%> - Dish design: focal length, aperture size, rim radius, opening angle
+%> - Feed: circular aperture parameters and excitation frequency
+%> - Dipole configuration: 1 ring with uniformly spaced dipoles
+%> - Target suppression region: everything outside the main beam (mask)
+%>
+%> @section outputs Outputs
+%> - Visualizations of surface current and far-field radiation
+%> - 2D and 3D radiation pattern plots with and without dipole correction
+%>
+%> @section usage Usage
+%> - Ensure `DishAnalyzer` and `SimpleDipole` classes are available
+%> - Adjust `N` (dipole count) and `mask` settings to target specific regions
+%>
+%> @note
+%> - The dipole optimization is performed using MATLAB's `lsqr` function
+%> - Only one ring of dipoles is used in this script (see `_mulrings` variant for multi-ring)
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

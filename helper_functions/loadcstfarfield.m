@@ -1,3 +1,18 @@
+%> @file loadcstfarfield.m
+%> @brief Loads and processes far-field data exported from CST Studio Suite.
+%>
+%> This function parses a CST far-field text file and reconstructs the complex
+%> Etheta and Ephi components from magnitude and phase columns. It reshapes the
+%> data into 2D grids if the angular sampling is uniform, and computes the total
+%> normalized electric field magnitude in dB.
+%>
+%> @param filename Path to the far-field export file
+%>
+%> @retval EdB Normalized total electric field magnitude in dB
+%> @retval Etheta Complex theta-polarized field component
+%> @retval Ephi Complex phi-polarized field component
+%> @retval THETA Elevation angle grid [rad] or vector if not structured
+%> @retval PHI Azimuth angle grid [rad] or vector if not structured
 function [EdB, Etheta, Ephi, THETA, PHI] = loadcstfarfield(filename)
     % Read the data, skipping the first two header lines
     opts = detectImportOptions(filename, 'NumHeaderLines', 2);
@@ -24,8 +39,6 @@ function [EdB, Etheta, Ephi, THETA, PHI] = loadcstfarfield(filename)
     % Reshape into meshgrid format if phi and theta are structured
     unique_theta = unique(theta_rad);
     unique_phi   = unique(phi_rad);
-
-    
 
     if numel(theta_rad) == numel(unique_theta) * numel(unique_phi)
         % Assume row-major order: theta varies faster

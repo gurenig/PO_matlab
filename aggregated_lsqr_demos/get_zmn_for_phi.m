@@ -1,3 +1,34 @@
+%> @file get_zmn_for_phi.m
+%> @brief Constructs the system matrix Zmn and target vector d for dipole-based sidelobe reduction in a dish antenna.
+%>
+%> This function computes the matrix of dipole contributions (`Zmn`) and the difference vector (`d_vec`) between
+%> the original field and a target field (typically zero outside the main lobe). It uses the provided `DishAnalyzer`
+%> to determine the beamwidth and builds a window (`rectwin`) to preserve the main lobe while attenuating sidelobes.
+%>
+%> @param dish_analyzer DishAnalyzer object containing dish geometry and analysis methods.
+%> @param EdB Normalized far-field magnitude in dB (used for beamwidth calculation).
+%> @param Etheta Complex E-theta component of the dish's far-field.
+%> @param Ephi Complex E-phi component of the dish's far-field.
+%> @param theta_range Array of theta sampling points [rad].
+%> @param phi Fixed azimuth angle [rad] for evaluating the 2D far-field pattern.
+%> @param N Number of dipoles to place around the feed.
+%> @param rho_loc Radial distance of dipoles from dish center [m].
+%> @param phi_locs Array of azimuthal dipole positions [rad].
+%> @param freq Operating frequency [Hz].
+%>
+%> @retval Zmn Complex-valued system matrix of dipole field contributions (size 2M × N).
+%> @retval d_vec Desired modification vector (difference between target and current field values).
+%> @retval rectwin Rectangular window selecting main lobe region (for field preservation).
+%>
+%> @details
+%> This helper function is typically used in dipole excitation optimization (e.g., LSQR, fmincon).
+%> The dipole model used is `SimpleDipole`, oriented tangentially along azimuth.
+%>
+%> @see SimpleDipole
+%> @see DishAnalyzer
+%> @see find_lsqr_solution
+
+
 function [Zmn, d_vec, rectwin] = get_zmn_for_phi(dish_analyzer, EdB, Etheta, Ephi, theta_range, phi, N, rho_loc, phi_locs, freq)
     [~, ~, ~, ~, ~, bw_troughs_idx] = dish_analyzer.get_beam_width(phi, EdB, theta_range);
     rectwin = zeros(size(theta_range));

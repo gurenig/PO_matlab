@@ -1,3 +1,33 @@
+%> @file lsqr_single_phi.m
+%> @brief Demonstrates sidelobe reduction in a parabolic dish antenna using LSQR-optimized dipole currents for a single phi-plane.
+%>
+%> This script computes the far-field pattern of a dish antenna illuminated by a circular aperture, then places
+%> a ring of dipoles around the feed and optimizes their currents via LSQR to reduce sidelobes outside the main lobe.
+%> It visualizes the radiation pattern before and after dipole superposition, and validates anti-symmetry in the dipole excitations.
+%>
+%> @section KeyFeatures
+%> @li Constructs a parabolic dish surface and computes induced surface currents.
+%> @li Extracts a 2D cut (phi = constant) of the far-field radiation pattern.
+%> @li Builds a Zmn matrix and target vector using `find_lsqr_solution`.
+%> @li Solves for optimal dipole excitations using least-squares minimization.
+%> @li Evaluates the effect of dipole fields on sidelobe levels.
+%> @li Verifies anti-symmetry in the dipole excitation vector.
+%>
+%> @section Parameters
+%> @li Frequency: 2.5 GHz
+%> @li Number of dipoles: 100
+%> @li Dipole radius: half dish diameter
+%> @li Theta resolution: 1000 samples
+%>
+%> @note The LSQR system is built such that only sidelobes outside the 3dB beamwidth are reduced.
+%> @note Dipole currents are updated directly by scaling their `I0` values.
+%>
+%> @see find_lsqr_solution
+%> @see DishAnalyzer
+%> @see SimpleDipole
+
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

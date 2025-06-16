@@ -1,3 +1,21 @@
+%> @file pyramidal_horn_profiler.m
+%> @brief Script to profile pyramidal horn field generation performance.
+%>
+%> This script initializes physical constants and sets up parameters for a dish
+%> antenna and horn feed. It defines two field-generating functions: one for a
+%> circular aperture and one for a pyramidal horn. The horn field function is
+%> evaluated repeatedly for profiling or benchmarking purposes.
+%>
+%> @section inputs Inputs
+%> - None required directly. All parameters are defined in the script.
+%>
+%> @section outputs Outputs
+%> - No variables are saved or plotted. Script is used for runtime analysis.
+%>
+%> @section usage Usage
+%> Run directly from the command window or script editor to measure execution
+%> time or verify function behavior under repeated evaluation.
+
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]
 mu0 = 1.25663706e-6;  % [H/m]
@@ -17,7 +35,7 @@ d = 1.66*f;         % [m]
 R = d/100;          % [m]
 alpha = (1/2)*pi;   % [rad]
 
-% Aperture feed paramters
+% Aperture feed parameters
 a = lambda0;
 aperture_fields_fun = @(r, theta, phi) circ_aperture_fields(a, k, E0, r, theta, phi);
 
@@ -29,6 +47,6 @@ rho1 = 6*lambda0*0.5;  % [m]
 rho2 = 6*lambda0*0.5;  % [m]
 horn_fields_fun = @(r, theta, phi) pyramidal_horn_fields(eta0, a_, b_, a1, b1, rho1, rho2, freq, E0, r, theta, phi);
 
-for n=1:100
+for n = 1:100
     horn_fields_fun(100, sqrt(2)*n, 0.245);
 end

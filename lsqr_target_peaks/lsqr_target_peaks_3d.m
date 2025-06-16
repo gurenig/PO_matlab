@@ -1,3 +1,23 @@
+%> @file lsqr_target_peaks_3d.m
+%> @brief Suppresses sidelobe peaks in a dish antenna radiation pattern using least squares optimization.
+%>
+%> This script loads or calculates the far-field radiation of a parabolic dish antenna,
+%> identifies sidelobe peaks across multiple azimuthal slices, and places a set of
+%> auxiliary dipoles to cancel them out. A least squares solution is computed to minimize
+%> the sidelobe energy. The resulting field is visualized with a 2D polar animation.
+%>
+%> @section inputs Inputs
+%> - CST far-field export file (optional, if `loadcstfarfield_mycoords` is used)
+%> - Predefined physical and antenna parameters
+%>
+%> @section outputs Outputs
+%> - Visualizations of current distribution and 2D radiation patterns before and after optimization
+%> - Slider-based GUI for inspecting phi slices
+%>
+%> @section usage Usage
+%> Run the script directly to evaluate the impact of added dipoles on the far-field radiation.
+%> The dipole parameters and sidelobe suppression level can be tuned within the script.
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

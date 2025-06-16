@@ -1,3 +1,14 @@
+%> @file center_slice.m
+%> @brief Extracts a centered window of specified length from a vector.
+%>
+%> This function returns a subvector of length k, centered around the middle
+%> of the input vector v. If k is larger than the length of v, an error is raised.
+%> If the window would exceed the vector bounds, it is clamped appropriately.
+%>
+%> @param v Input vector
+%> @param k Desired window length (must be less than or equal to length(v))
+%>
+%> @retval c Output vector of length k centered within v
 function c = center_slice(v, k)
     n = length(v);
     if k > n

@@ -1,3 +1,29 @@
+%> @file dipole_ring.m
+%> @brief Simulates the far-field pattern of a uniform circular array (UCA) of vertical dipoles.
+%>
+%> This script places N vertical dipoles evenly along a circular ring in the XY-plane,
+%> computes the total radiated E-field pattern in 3D (spherical coordinates),
+%> and compares the result with MATLAB’s Phased Array Toolbox implementation of a UCA.
+%>
+%> Key features:
+%> - Constructs a ring of `SimpleDipole` objects with specified radius and spacing
+%> - Evaluates combined E-field (`Etheta`, `Ephi`) on a theta-phi grid
+%> - Plots 3D radiation pattern in decibels using a custom plotting method
+%> - Verifies result using `phased.UCA` and plots reference pattern for comparison
+%>
+%> @section Parameters
+%> @li Frequency: 500 MHz
+%> @li Number of dipoles: 11
+%> @li Radius of ring: 1.5 m
+%> @li Dipole length: 0.5λ₀
+%>
+%> @note Dipoles are oriented vertically (along the Z-axis)
+%> @note The total field is computed via direct summation of individual dipole fields
+%> @see SimpleDipole
+%> @see phased.UCA
+%> @see DishAnalyzer.plot_3d_rad_pattern
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

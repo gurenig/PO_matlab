@@ -1,3 +1,30 @@
+%> @file dipole_demo.m
+%> @brief Demonstrates 3D and 2D radiation patterns of a single dipole in free space.
+%>
+%> This script models a dipole antenna using either the `SimpleDipole` or `DirectedDipole` class,
+%> computes its far-field radiation pattern in spherical coordinates, and renders it in:
+%> - 3D surface plots (magnitude in dB)
+%> - 2D polar plots (cross-section at fixed phi)
+%> - 2D rectangular plots (theta vs. magnitude)
+%>
+%> The script is also useful for visualizing the shape and orientation of a radiation pattern 
+%> with arbitrary dipole orientation and far-field observation angles.
+%>
+%> @section Parameters
+%> @li Frequency: 2.5 GHz
+%> @li Dipole length: λ₀/4
+%> @li Dipole orientation: Z-axis
+%> @li Far-field radius: 1000 × λ₀
+%> @li Far-field grid: θ in [0, π], φ in [0, 2π] with 100×1000 resolution
+%>
+%> @note The radiation pattern is normalized and clipped to -40 dB before plotting.
+%> @note Uses `mysph2cart` to convert the spherical mesh to Cartesian for 3D visualization.
+%>
+%> @see SimpleDipole
+%> @see DirectedDipole
+%> @see mysph2cart
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

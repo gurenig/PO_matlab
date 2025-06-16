@@ -1,3 +1,28 @@
+%> @file dish_dipole_lsqr_demo.m
+%> @brief Demonstrates LSQR-based dipole optimization to suppress sidelobes in a parabolic dish radiation pattern.
+%>
+%> This script simulates the far-field radiation pattern of a parabolic reflector fed by a circular aperture,
+%> then uses a ring of dipoles placed beyond the reflector's rim to reduce sidelobes via LSQR optimization.
+%> It targets regions outside the 3dB beamwidth for attenuation while preserving the main lobe.
+%>
+%> @section inputs Inputs
+%> - Parabolic dish geometry: focal length `f`, diameter `d`, curvature `R`, resolution parameters
+%> - Feed excitation: frequency `freq`, amplitude `E0`, circular aperture radius `a`
+%> - Dipole ring: number of dipoles `N`, radius `rho_loc`, azimuthal placement
+%> - Sidelobe suppression region defined via a rectangular window around main lobe troughs
+%>
+%> @section outputs Outputs
+%> - Radiation pattern before and after dipole field superposition
+%> - 3D visualization of dish surface and dipole placement
+%> - Polar plot of radiation pattern with sidelobe suppression
+%> - Plots comparing dipole coefficients with their antisymmetric counterparts
+%>
+%> @section notes Notes
+%> - The optimization enforces antisymmetry by plotting dipole weights against their diametrically opposite positions
+%> - Useful for validating ring-based dipole arrangements and phase symmetry strategies
+%> - Target field is zeroed outside the main beam (rectangular window), achieving directional attenuation
+
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]

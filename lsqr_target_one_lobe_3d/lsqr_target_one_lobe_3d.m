@@ -1,3 +1,24 @@
+%> @file lsqr_target_one_lobe_3d.m
+%> @brief Suppresses a single sidelobe ring in a 3D radiation pattern using LSQR-based dipole optimization.
+%>
+%> This script simulates the far-field radiation of a parabolic dish antenna and places a ring
+%> of dipoles around the dish to cancel one prominent sidelobe ring. The dipole currents are
+%> determined via least squares using field samples at two antipodal theta positions.
+%> It then visualizes the resulting fields and generates a video animation of the 2D radiation pattern.
+%>
+%> @section inputs Inputs
+%> - Physical and antenna parameters (dish size, feed function, frequency)
+%> - `circ_aperture_fields` function for feed modeling
+%>
+%> @section outputs Outputs
+%> - Dipole ring current visualization
+%> - 2D far-field radiation pattern plots with and without dipoles
+%> - Video: `radiation_pattern_animation.mp4`
+%>
+%> @section usage Usage
+%> Run the script directly to calculate the optimal dipole configuration for sidelobe suppression.
+%> Modify parameters such as the sidelobe theta location or number of dipoles as needed.
+
 %% Parameters
 % Physical constants
 ep0 = 8.85418782e-12; % [F/m]
@@ -44,8 +65,6 @@ phi_range = PHI(:,1);
 
 elapsed = toc;
 disp(['Elapsed E calculation time: ', num2str(elapsed), ' seconds']);
-
-
 
 %% Focus on a fixed theta point ad try to eliminate the sidelobe ring
 % Find the target theta index
