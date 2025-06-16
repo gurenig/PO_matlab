@@ -57,8 +57,8 @@ phi_resolution = 100;
 theta_resolution = 1000;
 
 dish_analyzer = DishAnalyzer(dish);
-% [EdB, Etheta, Ephi, THETA, PHI] = dish_analyzer.get_3d_rad_pattern(theta_resolution, phi_resolution);
-[EdB, Etheta, Ephi, THETA, PHI] = loadcstfarfield_mycoords('farfield_(f=2.4)_[1].txt');
+[EdB, Etheta, Ephi, THETA, PHI] = dish_analyzer.get_3d_rad_pattern(theta_resolution, phi_resolution);
+% [EdB, Etheta, Ephi, THETA, PHI] = loadcstfarfield_mycoords('farfield_(f=2.4)_[1].txt');
 Emag = sqrt(abs(Etheta).^2 + abs(Ephi).^2);
 theta_range = THETA(1,:);
 phi_range = PHI(:,1);

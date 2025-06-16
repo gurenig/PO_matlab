@@ -235,4 +235,100 @@ classdef ParabolicDish < handle
             theta0 = atan2(d_/2, z0_);
         end
     end
+
+    methods (Access = private)
+        %> @brief Generates the parametric surface of the parabolic dish reflector.
+        %>
+        %> This method computes the 3D Cartesian coordinates (X, Y, Z) of the reflective parabolic surface 
+        %> based on the paraboloid equation z = f - rho^2 / (4f), where `f` is the focal length.
+        %> It also calculates surface normals (nx, ny, nz) and the surface Jacobian for integration.
+        %>
+        %> @details
+        %> - The surface is discretized using `rho_res` and `phi_res`.
+        %> - Normals are derived from the gradient of the paraboloid.
+        %> - The Jacobian is computed as RHO * sqrt(1 + (RHO/(2f))^2) for accurate surface integration.
+        %>
+        %> @note This function populates `X{1}`, `Y{1}`, `Z{1}`, `nx{1}`, `ny{1}`, `nz{1}`, and `jacobian{1}`.
+        %>
+        %> @private
+        function surface_dish(obj)
+            % Define the range of rho and phi
+            obj.rho_range = linspace(0, obj.d./2, obj.rho_res); % Distance rho range
+            obj.phi_range = linspace(0, 2*pi, obj.phi_res); % Angle phi range
+            
+            % Create a grid for t and phi
+            [RHO, PHI] = meshgrid(obj.rho_range, obj.phi_range);
+            
+            % Define the parametric curve z(t) as an anonymous function
+            z = @(rho) obj.f - (rho.^2)./(4.*obj.f);
+        
+            % Compute the parametric surface
+            obj.X{1} = RHO .* cos(PHI);    % X(rho, phi)
+            obj.Y{1} = RHO .* sin(PHI);    % Y(rho, phi)
+            obj.Z{1} = z(RHO);             % Z(rho, phi)
+
+            % Normal calculations
+            a = RHO./(2*obj.f);
+            b = sqrt(a.^2 + 1);
+
+            obj.nx{obj.DISH} = -(cos(PHI) .* a) ./ b;
+            obj.ny{obj.DISH} = -(sin(PHI) .* a) ./ b;
+            obj.nz{obj.DISH} = -1 ./ b;
+
+            % Jacobian calculation
+            obj.jacobian{obj.DISH} = RHO.*sqrt(1+(RHO./(2*obj.f)).^2);
+        end
+        
+        %> @brief Generates the parametric surface of the dish rim (roll-off region).
+        %>
+        %> This method computes the coordinates, surface normals, and Jacobian for the rim region at the edge
+        %> of the parabolic reflector. The rim is modeled as a circular arc orthogonal to the paraboloid.
+        %>
+        %> @details
+        %> - The rim is defined using polar arc equations r(t) and z(t) derived from the parabola edge.
+        %> - The arc is defined with radius `R` and offset based on geometric constraints to ensure smooth junction.
+        %> - Normals and Jacobians are calculated for proper field and current integration.
+        %>
+        %> @note This function populates `X{2}`, `Y{2}`, `Z{2}`, `nx{2}`, `ny{2}`, `nz{2}`, and `jacobian{2}`.
+        %>
+        %> @private
+        function surface_rim(obj)
+            % Calculate rim parameters
+            % rho1 = obj.d/2;
+            z1 = obj.f - (obj.d^2)/(16*obj.f);
+            m1 = -obj.d/(4*obj.f);
+            m2 = -1/m1;
+            beta = pi - atan(m2);
+            z2 = z1 + (obj.R*m2)/sqrt(1+m2^2);
+            rho2 = obj.d/2 + obj.R/sqrt(1+m2^2);
+        
+            % Define the range of t and phi
+            obj.t_range = linspace(0, obj.alpha, obj.t_res); % Parameter t range
+            obj.phi_range = linspace(0, 2*pi, obj.phi_res); % Angle phi range
+            
+            % Create a grid for t and phi
+            [T, PHI] = meshgrid(obj.t_range, obj.phi_range);
+            
+            % Define the parametric curves r(t) and z(t) as anonymous function
+            r = @(t) rho2 + obj.R.*cos(t-beta);
+            z = @(t) z2 + obj.R.*sin(t-beta);
+        
+            % Compute the parametric surface
+            obj.X{obj.RIM} = r(T) .* cos(PHI); % X(t, phi)
+            obj.Y{obj.RIM} = r(T) .* sin(PHI); % Y(t, phi)
+            obj.Z{obj.RIM} = z(T);             % Z(t, phi)
+            
+            % Normal calculations
+            [rho, phi, z] = mycart2cyl(obj.X{obj.RIM},obj.Y{obj.RIM},obj.Z{obj.RIM});
+            a = ((rho-rho2)./obj.R);
+
+            % Compute the parametric normals
+            obj.nx{obj.RIM} = cos(phi).*a;
+            obj.ny{obj.RIM} = sin(phi).*a;
+            obj.nz{obj.RIM} = (z-z2)./obj.R;
+
+            % Jacobian calculation
+            obj.jacobian{obj.RIM} = obj.R.*rho;
+        end
+    end
 end
